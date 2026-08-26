@@ -14,6 +14,7 @@ import {
   X,
   Users,
   Layers,
+  RotateCcw,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -36,17 +37,16 @@ export const Navbar: React.FC = () => {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-8">
-            <Link to="/" className="flex items-center gap-2.5 group">
+          <div className="flex items-center gap-4 lg:gap-6">
+            <Link to="/" className="flex items-center gap-2.5 group shrink-0">
               <div className="w-9 h-9 rounded-md bg-[#1E3A5F] flex items-center justify-center text-white shadow-2xs group-hover:bg-[#152843] transition-colors">
                 <Boxes className="w-5 h-5" />
               </div>
               <div>
                 <span className="text-base font-bold tracking-tight text-slate-900 flex items-center gap-1.5">
                   EquipFlow
-                  
                 </span>
               </div>
             </Link>
@@ -55,75 +55,86 @@ export const Navbar: React.FC = () => {
             <nav className="hidden md:flex items-center gap-1">
               <Link
                 to="/equipment"
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
                   isActive('/equipment')
                     ? 'bg-slate-100 text-slate-900 font-semibold'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
-                <Layers className="w-4 h-4 text-slate-500" />
-                Equipment Catalog
+                <Layers className="w-3.5 h-3.5 text-slate-500" />
+                Equipment
               </Link>
 
               {isAuthenticated && (
                 <Link
                   to="/rentals"
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                  className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
                     isActive('/rentals')
                       ? 'bg-slate-100 text-slate-900 font-semibold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <CalendarCheck className="w-4 h-4 text-slate-500" />
+                  <CalendarCheck className="w-3.5 h-3.5 text-slate-500" />
                   My Rentals
                 </Link>
               )}
 
               {/* Admin specific top links */}
               {isAuthenticated && isAdmin && (
-                <div className="flex items-center gap-1 pl-2 border-l border-slate-200 ml-2">
+                <div className="flex items-center gap-1 pl-2 border-l border-slate-200 ml-1">
                   <Link
                     to="/admin/dashboard"
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                    className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
                       isActive('/admin/dashboard')
                         ? 'bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                   >
-                    <LayoutDashboard className="w-4 h-4 text-[#1E3A5F]" />
+                    <LayoutDashboard className="w-3.5 h-3.5 text-[#1E3A5F]" />
                     Dashboard
                   </Link>
                   <Link
                     to="/admin/equipment"
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                    className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
                       isActive('/admin/equipment')
                         ? 'bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                   >
-                    <Boxes className="w-4 h-4 text-[#1E3A5F]" />
-                    Manage Fleet
+                    <Boxes className="w-3.5 h-3.5 text-[#1E3A5F]" />
+                    Fleet
                   </Link>
                   <Link
                     to="/admin/bookings"
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                    className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
                       isActive('/admin/bookings')
                         ? 'bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                   >
-                    <CalendarCheck className="w-4 h-4 text-[#1E3A5F]" />
-                    All Bookings
+                    <CalendarCheck className="w-3.5 h-3.5 text-[#1E3A5F]" />
+                    Bookings
+                  </Link>
+                  <Link
+                    to="/admin/returns"
+                    className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+                      isActive('/admin/returns')
+                        ? 'bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-[#1E3A5F]" />
+                    Returns
                   </Link>
                   <Link
                     to="/admin/users"
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                    className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
                       isActive('/admin/users')
                         ? 'bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                   >
-                    <Users className="w-4 h-4 text-[#1E3A5F]" />
+                    <Users className="w-3.5 h-3.5 text-[#1E3A5F]" />
                     Users
                   </Link>
                 </div>
@@ -132,14 +143,14 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Right Action / Auth Profile */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3 shrink-0">
             {isAuthenticated && user ? (
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-xs font-semibold">
+                  <div className="w-8 h-8 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center text-xs font-semibold shrink-0">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="text-left hidden lg:block">
@@ -300,6 +311,14 @@ export const Navbar: React.FC = () => {
               >
                 <CalendarCheck className="w-4 h-4 text-[#1E3A5F]" />
                 All Bookings
+              </Link>
+              <Link
+                to="/admin/returns"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                <RotateCcw className="w-4 h-4 text-[#1E3A5F]" />
+                Return Requests
               </Link>
               <Link
                 to="/admin/users"

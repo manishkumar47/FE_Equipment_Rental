@@ -21,6 +21,9 @@ import {
   RefreshCw,
   Trash2,
   Filter,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
 } from 'lucide-react';
 
 export const AdminBookings: React.FC = () => {
@@ -28,7 +31,9 @@ export const AdminBookings: React.FC = () => {
   const [bookings, setBookings] = useState<RentalBookingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'UPCOMING' | 'COMPLETED'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<
+    'ALL' | 'ACTIVE' | 'UPCOMING' | 'OVERDUE' | 'RETURN_REQUESTED' | 'RETURNED'
+  >('ALL');
 
   // Cancel / Delete State
   const [cancellingBooking, setCancellingBooking] = useState<RentalBookingItem | null>(null);
@@ -52,7 +57,7 @@ export const AdminBookings: React.FC = () => {
 
   const filteredBookings = useMemo(() => {
     return bookings.filter((b) => {
-      const status = getBookingStatus(b.rentFrom, b.rentTo);
+      const status = getBookingStatus(b.rentFrom, b.rentTo, b.status);
       const matchesStatus = statusFilter === 'ALL' || status === statusFilter;
 
       const q = searchQuery.toLowerCase();
@@ -139,8 +144,10 @@ export const AdminBookings: React.FC = () => {
               >
                 <option value="ALL">All Statuses</option>
                 <option value="ACTIVE">Active Rentals</option>
+                <option value="RETURN_REQUESTED">Return Requested</option>
+                <option value="RETURNED">Returned</option>
+                <option value="OVERDUE">Overdue</option>
                 <option value="UPCOMING">Upcoming</option>
-                <option value="COMPLETED">Completed</option>
               </select>
             </div>
           </div>
@@ -189,7 +196,7 @@ export const AdminBookings: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredBookings.map((b) => {
-                    const status = getBookingStatus(b.rentFrom, b.rentTo);
+                    const status = getBookingStatus(b.rentFrom, b.rentTo, b.status);
                     const days = calculateRentalDays(b.rentFrom, b.rentTo);
                     const price = b.equipment?.price || 0;
                     const total = price > 0 ? days * price * b.quantity : 0;
@@ -221,29 +228,43 @@ export const AdminBookings: React.FC = () => {
                           {total > 0 ? formatCurrency(total) : '—'}
                         </td>
                         <td className="px-5 py-3.5">
-                          <Badge
-                            variant={
-                              status === 'ACTIVE'
-                                ? 'success'
-                                : status === 'UPCOMING'
-                                ? 'warning'
-                                : 'neutral'
-                            }
-                            size="sm"
-                          >
-                            {status}
-                          </Badge>
+                          {status === 'RETURNED' ? (
+                            <Badge variant="neutral" size="sm" className="bg-slate-100 text-slate-700 border-slate-200">
+                              <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" />
+                              RETURNED
+                            </Badge>
+                          ) : status === 'RETURN_REQUESTED' ? (
+                            <Badge variant="warning" size="sm" className="bg-amber-50 text-amber-800 border-amber-200">
+                              <Clock className="w-3 h-3 mr-1 text-amber-600" />
+                              RETURN REQUESTED
+                            </Badge>
+                          ) : status === 'OVERDUE' ? (
+                            <Badge variant="danger" size="sm" className="bg-rose-50 text-rose-700 border-rose-200">
+                              <AlertCircle className="w-3 h-3 mr-1" />
+                              OVERDUE
+                            </Badge>
+                          ) : status === 'ACTIVE' ? (
+                            <Badge variant="success" size="sm">
+                              ACTIVE
+                            </Badge>
+                          ) : (
+                            <Badge variant="warning" size="sm">
+                              UPCOMING
+                            </Badge>
+                          )}
                         </td>
                         <td className="px-5 py-3.5 text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setCancellingBooking(b)}
-                            className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                            aria-label="Cancel booking"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
+                          {status !== 'RETURNED' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setCancellingBooking(b)}
+                              className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                              aria-label="Cancel booking"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     );

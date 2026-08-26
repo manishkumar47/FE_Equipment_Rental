@@ -50,9 +50,26 @@ export function calculateRentalDays(startDate: string | Date, endDate: string | 
   }
 }
 
-export type BookingStatus = 'ACTIVE' | 'UPCOMING' | 'COMPLETED';
+export type BookingStatus =
+  | 'ACTIVE'
+  | 'UPCOMING'
+  | 'OVERDUE'
+  | 'RETURN_REQUESTED'
+  | 'RETURNED'
+  | 'COMPLETED';
 
-export function getBookingStatus(rentFrom: string, rentTo: string): BookingStatus {
+export function getBookingStatus(
+  rentFrom: string,
+  rentTo: string,
+  dbStatus?: string | null
+): BookingStatus {
+  if (dbStatus === 'returned') {
+    return 'RETURNED';
+  }
+  if (dbStatus === 'return_requested') {
+    return 'RETURN_REQUESTED';
+  }
+
   const now = new Date();
   const start = new Date(rentFrom);
   const end = new Date(rentTo);
@@ -62,6 +79,6 @@ export function getBookingStatus(rentFrom: string, rentTo: string): BookingStatu
   } else if (now >= start && now <= end) {
     return 'ACTIVE';
   } else {
-    return 'COMPLETED';
+    return 'OVERDUE';
   }
 }

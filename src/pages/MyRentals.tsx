@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { bookingApi } from '../api/booking.api';
+import { returnApi } from '../api/return.api';
 import { useToast } from '../context/ToastContext';
 import { getErrorMessage } from '../api/client';
 import {
@@ -28,6 +29,9 @@ import {
   RefreshCw,
   AlertCircle,
   Eye,
+  RotateCcw,
+  Clock,
+  CheckCircle2,
 } from 'lucide-react';
 
 export const MyRentals: React.FC = () => {
@@ -40,6 +44,10 @@ export const MyRentals: React.FC = () => {
   const [cancellingBooking, setCancellingBooking] = useState<RentalBookingItem | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
 
+  // Return Request State
+  const [returnRequestingBooking, setReturnRequestingBooking] = useState<RentalBookingItem | null>(null);
+  const [isRequestingReturn, setIsRequestingReturn] = useState(false);
+
   // Details Modal State
   const [selectedBooking, setSelectedBooking] = useState<RentalBookingItem | null>(null);
 
@@ -47,11 +55,9 @@ export const MyRentals: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Fetch user's bookings
       const items = await bookingApi.getMyBookings();
       setBookings(items);
     } catch (err: unknown) {
-      // Fallback: try getAll if my endpoint not supported
       try {
         const items = await bookingApi.getAll();
         setBookings(items);
@@ -85,6 +91,29 @@ export const MyRentals: React.FC = () => {
     }
   };
 
+  const handleRequestReturn = async () => {
+    if (!returnRequestingBooking) return;
+
+    setIsRequestingReturn(true);
+    try {
+      const updated = await returnApi.requestReturn(returnRequestingBooking.id);
+      showToast('Return request submitted! Admin will verify condition and finalize.', 'success');
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.id === returnRequestingBooking.id
+            ? { ...b, status: 'return_requested', returnRequestedAt: updated.returnRequestedAt || new Date().toISOString() }
+            : b
+        )
+      );
+      setReturnRequestingBooking(null);
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err);
+      showToast(msg, 'error');
+    } finally {
+      setIsRequestingReturn(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -99,7 +128,7 @@ export const MyRentals: React.FC = () => {
             My Equipment Rentals
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Track active reservations, scheduled equipment pickups, and historical rental orders
+            Track active reservations, scheduled equipment pickups, and request returns
           </p>
         </div>
 
@@ -166,8 +195,17 @@ export const MyRentals: React.FC = () => {
             const price = booking.equipment?.price || 0;
             const total = price > 0 ? days * price * booking.quantity : 0;
 
+            const now = new Date();
+            const rentToDate = new Date(booking.rentTo);
+            const isOverdue = now > rentToDate;
+            const daysOverdue = isOverdue
+              ? Math.floor((now.getTime() - rentToDate.getTime()) / (1000 * 60 * 60 * 24))
+              : 0;
+
+            const isReturned = booking.status === 'returned';
+            const isReturnRequested = booking.status === 'return_requested';
+            const isActiveBooking = !booking.status || booking.status === 'active';
             const isUpcoming = status === 'UPCOMING';
-            const isActive = status === 'ACTIVE';
 
             return (
               <Card
@@ -191,18 +229,29 @@ export const MyRentals: React.FC = () => {
                           <h3 className="text-base font-bold text-slate-900">
                             {equipmentName}
                           </h3>
-                          <Badge
-                            variant={
-                              isActive ? 'success' : isUpcoming ? 'warning' : 'neutral'
-                            }
-                            size="sm"
-                          >
-                            {status === 'ACTIVE'
-                              ? 'Active Rental'
-                              : status === 'UPCOMING'
-                              ? 'Upcoming Reservation'
-                              : 'Rental Completed'}
-                          </Badge>
+
+                          {/* Status Badge Hierarchy */}
+                          {isReturned ? (
+                            <Badge variant="neutral" size="sm" className="bg-slate-100 text-slate-700">
+                              <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" /> Returned
+                            </Badge>
+                          ) : isReturnRequested ? (
+                            <Badge variant="warning" size="sm" className="bg-amber-50 text-amber-800 border-amber-200">
+                              <Clock className="w-3 h-3 mr-1 text-amber-600" /> Return Requested (Pending Verification)
+                            </Badge>
+                          ) : isOverdue ? (
+                            <Badge variant="danger" size="sm">
+                              <AlertCircle className="w-3 h-3 mr-1" /> Overdue ({daysOverdue} {daysOverdue === 1 ? 'day' : 'days'})
+                            </Badge>
+                          ) : isUpcoming ? (
+                            <Badge variant="warning" size="sm">
+                              Upcoming Reservation
+                            </Badge>
+                          ) : (
+                            <Badge variant="success" size="sm">
+                              Active Rental
+                            </Badge>
+                          )}
                         </div>
 
                         {equipmentDesc && (
@@ -234,12 +283,34 @@ export const MyRentals: React.FC = () => {
                               </span>
                             </div>
                           )}
+
+                          {booking.returnCondition && (
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                              <span>Condition:</span>
+                              <span className="font-semibold capitalize text-slate-700">
+                                {booking.returnCondition}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
 
                     {/* Right: Actions */}
-                    <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 self-end md:self-center shrink-0">
+                      {/* Request Return Button */}
+                      {isActiveBooking && !isUpcoming && (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => setReturnRequestingBooking(booking)}
+                          leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                          className="bg-[#1E3A5F] hover:bg-[#152843]"
+                        >
+                          Request Return
+                        </Button>
+                      )}
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -249,15 +320,18 @@ export const MyRentals: React.FC = () => {
                         Details
                       </Button>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setCancellingBooking(booking)}
-                        className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                        leftIcon={<Trash2 className="w-3.5 h-3.5" />}
-                      >
-                        Cancel
-                      </Button>
+                      {/* Cancel only available for active/upcoming bookings before return requested */}
+                      {isActiveBooking && isUpcoming && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCancellingBooking(booking)}
+                          className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                          leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                        >
+                          Cancel
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -278,18 +352,15 @@ export const MyRentals: React.FC = () => {
         >
           <div className="space-y-4 text-left">
             <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs space-y-2.5">
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-slate-500">Status:</span>
-                <Badge
-                  variant={
-                    getBookingStatus(selectedBooking.rentFrom, selectedBooking.rentTo) === 'ACTIVE'
-                      ? 'success'
-                      : 'warning'
-                  }
-                  size="sm"
-                >
-                  {getBookingStatus(selectedBooking.rentFrom, selectedBooking.rentTo)}
-                </Badge>
+                <span className="font-semibold capitalize text-slate-800">
+                  {selectedBooking.status === 'return_requested'
+                    ? 'Return Requested'
+                    : selectedBooking.status === 'returned'
+                    ? 'Returned'
+                    : getBookingStatus(selectedBooking.rentFrom, selectedBooking.rentTo)}
+                </span>
               </div>
 
               <div className="flex justify-between">
@@ -320,6 +391,51 @@ export const MyRentals: React.FC = () => {
                 </span>
               </div>
 
+              {selectedBooking.returnRequestedAt && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Return Requested At:</span>
+                  <span className="font-semibold text-slate-800">
+                    {formatDateTime(selectedBooking.returnRequestedAt)}
+                  </span>
+                </div>
+              )}
+
+              {selectedBooking.returnedAt && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Returned At:</span>
+                  <span className="font-semibold text-slate-800">
+                    {formatDateTime(selectedBooking.returnedAt)}
+                  </span>
+                </div>
+              )}
+
+              {selectedBooking.returnCondition && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Verified Condition:</span>
+                  <span className="font-semibold capitalize text-slate-800">
+                    {selectedBooking.returnCondition}
+                  </span>
+                </div>
+              )}
+
+              {selectedBooking.conditionNotes && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Admin Notes:</span>
+                  <span className="text-slate-700 italic">
+                    {selectedBooking.conditionNotes}
+                  </span>
+                </div>
+              )}
+
+              {selectedBooking.rejectionReason && (
+                <div className="flex justify-between text-rose-700">
+                  <span>Rejection Reason:</span>
+                  <span className="font-medium">
+                    {selectedBooking.rejectionReason}
+                  </span>
+                </div>
+              )}
+
               <div className="flex justify-between">
                 <span className="text-slate-500">Duration:</span>
                 <span className="font-semibold text-slate-800">
@@ -329,7 +445,7 @@ export const MyRentals: React.FC = () => {
 
               {selectedBooking.equipment?.price && (
                 <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-slate-900 text-sm">
-                  <span>Total Cost:</span>
+                  <span>Rental Cost:</span>
                   <span className="text-emerald-700">
                     {formatCurrency(
                       calculateRentalDays(selectedBooking.rentFrom, selectedBooking.rentTo) *
@@ -354,6 +470,23 @@ export const MyRentals: React.FC = () => {
         </Modal>
       )}
 
+      {/* Return Request Confirmation Dialog */}
+      {returnRequestingBooking && (
+        <ConfirmDialog
+          isOpen={!!returnRequestingBooking}
+          onClose={() => setReturnRequestingBooking(null)}
+          onConfirm={handleRequestReturn}
+          title="Confirm Return Request"
+          message={`Are you ready to initiate the return process for "${
+            returnRequestingBooking.equipment?.name || 'this equipment'
+          }" (Booking #${returnRequestingBooking.id})? An administrator will inspect the equipment condition and finalize the return.`}
+          confirmText="Yes, Request Return"
+          cancelText="Not Now"
+          variant="primary"
+          isLoading={isRequestingReturn}
+        />
+      )}
+
       {/* Cancel Confirmation Dialog */}
       {cancellingBooking && (
         <ConfirmDialog
@@ -373,3 +506,4 @@ export const MyRentals: React.FC = () => {
     </div>
   );
 };
+

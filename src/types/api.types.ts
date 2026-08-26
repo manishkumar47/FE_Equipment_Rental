@@ -52,6 +52,13 @@ export interface RentalBookingItem {
   quantity: number;
   userId: number;
   equipmentId: number;
+  status?: 'active' | 'return_requested' | 'returned';
+  returnRequestedAt?: string | null;
+  returnedAt?: string | null;
+  returnCondition?: 'good' | 'damaged' | 'lost' | null;
+  conditionNotes?: string | null;
+  rejectionReason?: string | null;
+  computedStatus?: string;
   isReminderSent?: boolean;
   isDeleted?: boolean;
   deletedAt?: string | null;
@@ -77,7 +84,7 @@ export interface CreateEquipmentPayload {
   quantity?: number;
   price: number;
   imageUrl?: string;
-  categoryId?:number
+  categoryId?: number;
 }
 
 export interface UpdateEquipmentPayload {
@@ -101,3 +108,40 @@ export interface CreateUserPayload {
   password: string;
   role?: Role;
 }
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ConfirmReturnPayload {
+  condition: 'good' | 'damaged' | 'lost';
+  conditionNotes?: string;
+  damageFee?: number;
+}
+
+export interface FineBreakdown {
+  id?: number;
+  totalFine: number;
+  lateFee: number;
+  conditionFee: number;
+  daysLate: number;
+  breakdown: {
+    lateFee: number;
+    damageFee: number;
+    replacementCost: number;
+  };
+}
+
+export interface ConfirmReturnResponse {
+  booking: RentalBookingItem;
+  fine: FineBreakdown | null;
+}
+
+export interface RejectReturnPayload {
+  rejectionReason: string;
+}
+

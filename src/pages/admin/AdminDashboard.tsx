@@ -17,6 +17,7 @@ import {
   PlusCircle,
   ArrowRight,
   Package,
+  RotateCcw,
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -47,10 +48,10 @@ export const AdminDashboard: React.FC = () => {
 
   const totalStockUnits = equipments.reduce((sum, item) => sum + (item.quantity || 0), 0);
   const activeRentalsCount = bookings.filter(
-    (b) => getBookingStatus(b.rentFrom, b.rentTo) === 'ACTIVE'
+    (b) => getBookingStatus(b.rentFrom, b.rentTo, b.status) === 'ACTIVE'
   ).length;
   const upcomingRentalsCount = bookings.filter(
-    (b) => getBookingStatus(b.rentFrom, b.rentTo) === 'UPCOMING'
+    (b) => getBookingStatus(b.rentFrom, b.rentTo, b.status) === 'UPCOMING'
   ).length;
 
   return (
@@ -71,7 +72,12 @@ export const AdminDashboard: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Link to="/admin/returns">
+            <Button variant="outline" size="sm" className="border-amber-300 bg-amber-50/50 hover:bg-amber-100/50 text-amber-900" leftIcon={<RotateCcw className="w-4 h-4 text-amber-700" />}>
+              Return Requests
+            </Button>
+          </Link>
           <Link to="/admin/equipment">
             <Button variant="primary" size="sm" leftIcon={<PlusCircle className="w-4 h-4" />}>
               Manage Equipment
@@ -233,7 +239,7 @@ export const AdminDashboard: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {bookings.slice(0, 5).map((booking) => {
-                      const status = getBookingStatus(booking.rentFrom, booking.rentTo);
+                      const status = getBookingStatus(booking.rentFrom, booking.rentTo, booking.status);
                       return (
                         <tr key={booking.id} className="hover:bg-slate-50/70 transition-colors">
                           <td className="px-4 py-3 font-mono font-bold text-slate-600">
@@ -255,6 +261,8 @@ export const AdminDashboard: React.FC = () => {
                                   ? 'success'
                                   : status === 'UPCOMING'
                                   ? 'warning'
+                                  : status === 'OVERDUE'
+                                  ? 'danger'
                                   : 'neutral'
                               }
                               size="sm"

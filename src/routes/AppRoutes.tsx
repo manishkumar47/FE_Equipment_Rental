@@ -20,6 +20,7 @@ import { Profile } from '../pages/Profile';
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { AdminEquipment } from '../pages/admin/AdminEquipment';
 import { AdminBookings } from '../pages/admin/AdminBookings';
+import { AdminReturns } from '../pages/admin/AdminReturns';
 import { AdminUsers } from '../pages/admin/AdminUsers';
 
 // 404
@@ -85,6 +86,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute requireAdmin>
               <AdminBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/returns"
+          element={
+            <ProtectedRoute requireAdmin>
+              <AdminReturns />
             </ProtectedRoute>
           }
         />
