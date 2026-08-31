@@ -400,7 +400,7 @@ export const Equipment: React.FC = () => {
                         getEquipmentIcon(item.name)
                       )}
                     </div>
-                    <div>
+                    <div className="text-right">
                       {isAvailable ? (
                         <Badge variant="success" size="sm">
                           {item.quantity} {item.quantity === 1 ? 'unit' : 'units'} left
@@ -409,6 +409,11 @@ export const Equipment: React.FC = () => {
                         <Badge variant="danger" size="sm">
                           Out of Stock
                         </Badge>
+                      )}
+                      {!!item.totalItemCount && (
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          {item.availableItemCount ?? 0}/{item.totalItemCount} tracked units ready
+                        </p>
                       )}
                     </div>
                   </div>

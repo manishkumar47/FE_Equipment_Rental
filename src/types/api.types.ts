@@ -42,7 +42,51 @@ export interface EquipmentItem {
   createdAt?: string;
   isDeleted?: boolean;
   deletedAt?: string | null;
-  category:Category 
+  category:Category
+  /** Derived from registered physical units (see EquipmentUnit). Informational only —
+   * `quantity` above remains the source of truth for booking availability. */
+  totalItemCount?: number;
+  availableItemCount?: number;
+}
+
+/**
+ * A single physical/serialized unit ("copy") of an EquipmentItem model, e.g. one
+ * specific drill with its own asset tag. Lets admins track condition/loss/damage
+ * per physical unit instead of only an aggregate `quantity` count.
+ */
+export type EquipmentUnitStatus =
+  | 'available'
+  | 'rented'
+  | 'under_repair'
+  | 'damaged'
+  | 'lost'
+  | 'retired';
+
+export interface EquipmentUnit {
+  id: number;
+  equipmentId: number;
+  serialNumber: string;
+  status: EquipmentUnitStatus;
+  conditionNotes?: string | null;
+  createdAt?: string;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+}
+
+export interface CreateEquipmentUnitPayload {
+  serialNumber: string;
+  status?: EquipmentUnitStatus;
+  conditionNotes?: string;
+}
+
+export interface BulkCreateEquipmentUnitPayload {
+  items: CreateEquipmentUnitPayload[];
+}
+
+export interface UpdateEquipmentUnitPayload {
+  serialNumber?: string;
+  status?: EquipmentUnitStatus;
+  conditionNotes?: string;
 }
 
 export interface RentalBookingItem {
@@ -87,13 +131,33 @@ export interface CreateEquipmentPayload {
   categoryId?: number;
 }
 
+export interface BulkCreateEquipmentItem {
+  name: string;
+  description?: string;
+  quantity?: number;
+  price: number;
+  imageUrl?: string;
+  categoryId: number;
+}
+
+export interface BulkCreateEquipmentPayload {
+  items: BulkCreateEquipmentItem[];
+}
+
+export interface BulkCreateEquipmentResponse {
+  created: EquipmentItem[];
+  count: number;
+}
+
 export interface UpdateEquipmentPayload {
   name?: string;
   description?: string | null;
   quantity?: number;
   price?: number;
   imageUrl?: string | null;
+  categoryId?: number;
 }
+
 
 export interface CreateBookingPayload {
   equipmentId: number;

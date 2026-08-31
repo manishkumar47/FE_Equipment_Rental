@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { equipmentApi } from "../../api/equipment.api";
 import { useToast } from "../../context/ToastContext";
 import { getErrorMessage } from "../../api/client";
 import { formatCurrency } from "../../utils/formatters";
 import { getEquipmentIcon } from "../../utils/categoryIcons";
 import type { Category, EquipmentItem } from "../../types/api.types";
+import type { CsvRow } from "../../utils/csvValidation";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { Badge } from "../../components/ui/Badge";
@@ -13,6 +14,8 @@ import { Modal } from "../../components/ui/Modal";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { validateEquipmentCsv } from "../../utils/csvValidation";
+import { EquipmentUnitsModal } from "../../components/admin/EquipmentUnitsModal";
 import {
   Boxes,
   Plus,
@@ -22,6 +25,10 @@ import {
   RefreshCw,
   Package,
   Image as ImageIcon,
+  FileText,
+  AlertTriangle,
+  CheckCircle2,
+  Barcode,
 } from "lucide-react";
 import { categoryApi } from "../../api/category.api";
 
@@ -31,6 +38,7 @@ export const AdminEquipment: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Add / Edit Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,9 +65,23 @@ export const AdminEquipment: React.FC = () => {
   }>({});
   const [isSaving, setIsSaving] = useState(false);
 
+  // Bulk Import State
+  const [pendingCsvRows, setPendingCsvRows] = useState<CsvRow[]>([]);
+  const [csvValidationSummary, setCsvValidationSummary] = useState<{
+    totalRows: number;
+    invalidRows: number;
+    duplicateNames: number;
+  } | null>(null);
+  const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
+  const [bulkImportCategoryId, setBulkImportCategoryId] = useState<number | "">("");
+  const [isBulkImporting, setIsBulkImporting] = useState(false);
+
   // Delete State
   const [deletingItem, setDeletingItem] = useState<EquipmentItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Physical Units Modal State
+  const [managingUnitsItem, setManagingUnitsItem] = useState<EquipmentItem | null>(null);
 
   const fetchEquipments = async () => {
     setIsLoading(true);
@@ -109,6 +131,85 @@ export const AdminEquipment: React.FC = () => {
     setFormErrors({});
     setIsModalOpen(true);
   };
+  const handleImportInventory = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    const result = await validateEquipmentCsv(file);
+
+    if (result.fatalError) {
+      showToast(result.fatalError, "error");
+      return;
+    }
+
+    // Log detailed results to console for admin debugging
+    if (result.errors.length > 0) {
+      console.warn("[CSV Import] Row-level errors:", result.errors);
+    }
+    if (result.duplicatesInFile.length > 0) {
+      console.warn("[CSV Import] Duplicates found within file:", result.duplicatesInFile);
+    }
+
+    if (result.valid.length === 0) {
+      showToast(
+        `No valid rows to import — ${result.errors.length} error(s), ${result.duplicatesInFile.length} duplicate(s). Check browser console for details.`,
+        "error",
+      );
+      return;
+    }
+
+    // Store valid rows and open the category picker dialog
+    setPendingCsvRows(result.valid);
+    setCsvValidationSummary({
+      totalRows: result.valid.length + result.errors.length + result.duplicatesInFile.length,
+      invalidRows: result.errors.length,
+      duplicateNames: result.duplicatesInFile.length,
+    });
+    setBulkImportCategoryId("");
+    setIsCategoryPickerOpen(true);
+  };
+
+  const handleBulkImportConfirm = async () => {
+    if (!bulkImportCategoryId) {
+      showToast("Please select a category for the imported equipment.", "error");
+      return;
+    }
+
+    setIsBulkImporting(true);
+    try {
+      const items = pendingCsvRows.map((row) => ({
+        name: row.name,
+        description: row.description,
+        price: row.price,
+        quantity: row.quantity,
+        imageUrl: row.imageUrl,
+        categoryId: Number(bulkImportCategoryId),
+      }));
+
+      const created = await equipmentApi.bulkCreate(items);
+
+      showToast(
+        `Successfully imported ${created.length} equipment item(s) into inventory!`,
+        "success",
+      );
+
+      setIsCategoryPickerOpen(false);
+      setPendingCsvRows([]);
+      setCsvValidationSummary(null);
+
+      // Refresh the equipment list
+      await fetchEquipments();
+    } catch (err: unknown) {
+      showToast(getErrorMessage(err), "error");
+    } finally {
+      setIsBulkImporting(false);
+    }
+  };
 
   const handleOpenEditModal = (item: EquipmentItem) => {
     setEditingItem(item);
@@ -147,11 +248,20 @@ export const AdminEquipment: React.FC = () => {
           quantity: Number(formData.quantity),
           price: Number(formData.price),
           imageUrl: formData.imageUrl.trim() || null,
+          ...(formData.categoryId !== null && {
+            categoryId: Number(formData.categoryId),
+          }),
         });
 
+        const newCategory = formData.categoryId
+          ? (categories.find((c) => c.id === Number(formData.categoryId)) ?? editingItem.category)
+          : editingItem.category;
+
         setEquipments((prev) =>
-          prev.map((item) =>
-            item.id === editingItem.id ? { ...item, ...updated } : item,
+          prev.map((eq) =>
+            eq.id === editingItem.id
+              ? { ...eq, ...updated, category: newCategory }
+              : eq,
           ),
         );
         showToast("Equipment updated successfully", "success");
@@ -236,6 +346,21 @@ export const AdminEquipment: React.FC = () => {
           >
             Add Equipment
           </Button>
+          <input
+            type="file"
+            className="hidden"
+            ref={fileInputRef}
+            accept=".csv"
+            onChange={handleFileChange}
+          />
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleImportInventory}
+            leftIcon={<FileText className="w-4 h-4" />}
+          >
+            Import Inventory
+          </Button>
         </div>
       </div>
 
@@ -289,6 +414,7 @@ export const AdminEquipment: React.FC = () => {
                     <th className="px-5 py-3.5">Model / Name</th>
                     <th className="px-5 py-3.5">Description</th>
                     <th className="px-5 py-3.5 text-center">Available Stock</th>
+                    <th className="px-5 py-3.5 text-center">Tracked Units</th>
                     <th className="px-5 py-3.5">Daily Rate</th>
                     <th className="px-5 py-3.5">Status</th>
                     <th className="px-5 py-3.5 text-right">Actions</th>
@@ -327,6 +453,18 @@ export const AdminEquipment: React.FC = () => {
                       <td className="px-5 py-3.5 text-center font-semibold text-slate-800">
                         {item.quantity}
                       </td>
+                      <td className="px-5 py-3.5 text-center">
+                        {item.totalItemCount ? (
+                          <Badge
+                            variant={item.availableItemCount ? "success" : "neutral"}
+                            size="sm"
+                          >
+                            {item.availableItemCount ?? 0}/{item.totalItemCount} tracked
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-400">Not tracked</span>
+                        )}
+                      </td>
                       <td className="px-5 py-3.5 font-bold text-slate-900">
                         {formatCurrency(item.price)}
                       </td>
@@ -340,6 +478,15 @@ export const AdminEquipment: React.FC = () => {
                       </td>
                       <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setManagingUnitsItem(item)}
+                            className="p-1.5 text-slate-600 hover:text-[#1E3A5F] hover:bg-[#1E3A5F]/5"
+                            aria-label="Manage physical units"
+                          >
+                            <Barcode className="w-3.5 h-3.5" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -521,6 +668,109 @@ export const AdminEquipment: React.FC = () => {
           variant="danger"
           isLoading={isDeleting}
         />
+      )}
+
+      {/* Manage Physical Units */}
+      {managingUnitsItem && (
+        <EquipmentUnitsModal
+          equipment={managingUnitsItem}
+          isOpen={!!managingUnitsItem}
+          onClose={() => setManagingUnitsItem(null)}
+          onChanged={fetchEquipments}
+        />
+      )}
+
+      {/* Bulk Import — Category Picker Dialog */}
+      {isCategoryPickerOpen && (
+        <Modal
+          isOpen={isCategoryPickerOpen}
+          onClose={() => {
+            if (!isBulkImporting) {
+              setIsCategoryPickerOpen(false);
+              setPendingCsvRows([]);
+              setCsvValidationSummary(null);
+            }
+          }}
+          title="Import Inventory from CSV"
+          description="Assign a category to all imported equipment items"
+          maxWidth="sm"
+        >
+          <div className="space-y-4 text-left">
+            {/* Validation summary */}
+            {csvValidationSummary && (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 space-y-1.5">
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>{pendingCsvRows.length} valid row(s) ready to import</span>
+                </div>
+                {csvValidationSummary.invalidRows > 0 && (
+                  <div className="flex items-center gap-2 text-xs text-amber-700">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span>
+                      {csvValidationSummary.invalidRows} invalid row(s) skipped — see browser console for details
+                    </span>
+                  </div>
+                )}
+                {csvValidationSummary.duplicateNames > 0 && (
+                  <div className="flex items-center gap-2 text-xs text-amber-700">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span>
+                      {csvValidationSummary.duplicateNames} duplicate name(s) removed — see browser console
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Category selector */}
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 block mb-1.5">
+                Default Category <span className="text-rose-500">*</span>
+              </label>
+              <select
+                value={bulkImportCategoryId}
+                onChange={(e) => setBulkImportCategoryId(Number(e.target.value) || "")}
+                disabled={isBulkImporting}
+                className="w-full rounded-md border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F] disabled:opacity-60"
+              >
+                <option value="">Select a category for all imported items</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-[11px] text-slate-400">
+                All {pendingCsvRows.length} item(s) will be assigned to this category. You can edit individual items after import.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsCategoryPickerOpen(false);
+                  setPendingCsvRows([]);
+                  setCsvValidationSummary(null);
+                }}
+                disabled={isBulkImporting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleBulkImportConfirm}
+                isLoading={isBulkImporting}
+                disabled={!bulkImportCategoryId}
+                leftIcon={<FileText className="w-4 h-4" />}
+              >
+                Import {pendingCsvRows.length} Item(s)
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );
