@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { bookingRequestApi } from '../../api/bookingRequest.api';
 import { useToast } from '../../context/ToastContext';
 import { getErrorMessage } from '../../api/client';
@@ -23,6 +24,7 @@ import {
 
 export const AdminBookingRequests: React.FC = () => {
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const [requests, setRequests] = useState<RentalBookingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,13 +63,13 @@ export const AdminBookingRequests: React.FC = () => {
     setApprovingId(booking.id);
     try {
       await bookingRequestApi.approve(booking.id);
-      showToast(`Booking #${booking.id} approved and marked active.`, 'success');
+      showToast(t('BOOKING_REQUEST_APPROVED', { id: booking.id }), 'success');
       setRequests((prev) => prev.filter((r) => r.id !== booking.id));
       setTotal((t) => Math.max(0, t - 1));
     } catch (err: unknown) {
       const msg = getErrorMessage(err);
       if (msg.includes('already processed') || msg.includes('409')) {
-        showToast('This request was already processed by another administrator.', 'warning');
+        showToast(t('BOOKING_REQUEST_ALREADY_PROCESSED'), 'warning');
         fetchRequests();
       } else {
         showToast(msg, 'error');
@@ -92,7 +94,7 @@ export const AdminBookingRequests: React.FC = () => {
     if (!rejectingBooking) return;
 
     if (!rejectionReason.trim()) {
-      showToast('Please provide a reason for rejecting the request.', 'error');
+      showToast(t('BOOKING_REJECTION_REASON_REQUIRED'), 'error');
       return;
     }
 
@@ -101,14 +103,14 @@ export const AdminBookingRequests: React.FC = () => {
       await bookingRequestApi.reject(rejectingBooking.id, {
         rejectionReason: rejectionReason.trim(),
       });
-      showToast(`Booking request #${rejectingBooking.id} rejected. Stock released.`, 'success');
+      showToast(t('BOOKING_REQUEST_REJECTED', { id: rejectingBooking.id }), 'success');
       setRequests((prev) => prev.filter((r) => r.id !== rejectingBooking.id));
       setTotal((t) => Math.max(0, t - 1));
       handleCloseRejectModal();
     } catch (err: unknown) {
       const msg = getErrorMessage(err);
       if (msg.includes('already processed') || msg.includes('409')) {
-        showToast('This request was already processed by another administrator.', 'warning');
+        showToast(t('BOOKING_REQUEST_ALREADY_PROCESSED'), 'warning');
         handleCloseRejectModal();
         fetchRequests();
       } else {

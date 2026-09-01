@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { equipmentUnitApi } from '../../api/equipmentUnit.api';
 import { useToast } from '../../context/ToastContext';
 import { getErrorMessage } from '../../api/client';
@@ -57,6 +58,7 @@ export const EquipmentUnitsModal: React.FC<EquipmentUnitsModalProps> = ({
   onChanged,
 }) => {
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [units, setUnits] = useState<EquipmentUnit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -113,7 +115,7 @@ export const EquipmentUnitsModal: React.FC<EquipmentUnitsModalProps> = ({
   const handleAddUnit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSerial.trim()) {
-      showToast('Enter a serial number / asset tag', 'error');
+      showToast(t('SERIAL_NUMBER_REQUIRED'), 'error');
       return;
     }
 
@@ -129,7 +131,7 @@ export const EquipmentUnitsModal: React.FC<EquipmentUnitsModalProps> = ({
       setNewSerial('');
       setNewStatus('available');
       setNewNotes('');
-      showToast('Unit registered', 'success');
+      showToast(t('UNIT_REGISTERED_SUCCESSFULLY'), 'success');
     } catch (err: unknown) {
       showToast(getErrorMessage(err), 'error');
     } finally {
@@ -157,7 +159,7 @@ export const EquipmentUnitsModal: React.FC<EquipmentUnitsModalProps> = ({
       setUnits((prev) => prev.map((u) => (u.id === unit.id ? updated : u)));
       setChanged(true);
       setEditingUnitId(null);
-      showToast('Unit updated', 'success');
+      showToast(t('UNIT_UPDATED_SUCCESSFULLY'), 'success');
     } catch (err: unknown) {
       showToast(getErrorMessage(err), 'error');
     } finally {
@@ -172,7 +174,7 @@ export const EquipmentUnitsModal: React.FC<EquipmentUnitsModalProps> = ({
       await equipmentUnitApi.delete(equipment.id, deletingUnit.id);
       setUnits((prev) => prev.filter((u) => u.id !== deletingUnit.id));
       setChanged(true);
-      showToast('Unit deleted', 'success');
+      showToast(t('UNIT_DELETED_SUCCESSFULLY'), 'success');
       setDeletingUnit(null);
     } catch (err: unknown) {
       showToast(getErrorMessage(err), 'error');

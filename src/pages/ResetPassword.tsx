@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../context/ToastContext';
 import { authApi } from '../api/auth.api';
 import { getErrorMessage } from '../api/client';
@@ -11,6 +12,7 @@ export const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const token = searchParams.get('token') || '';
 
@@ -104,7 +106,7 @@ export const ResetPassword: React.FC = () => {
     try {
       await authApi.resetPassword(password, token.trim());
       setIsSuccess(true);
-      showToast('Password reset successful! You can now log in.', 'success');
+      showToast(t('PASSWORD_RESET_SUCCESSFULLY'), 'success');
     } catch (err: unknown) {
       const msg = getErrorMessage(err);
       setErrors({ general: msg });

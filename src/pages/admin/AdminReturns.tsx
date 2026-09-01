@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { returnApi } from '../../api/return.api';
 import { useToast } from '../../context/ToastContext';
 import { getErrorMessage } from '../../api/client';
@@ -34,6 +35,7 @@ import {
 
 export const AdminReturns: React.FC = () => {
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const [returnRequests, setReturnRequests] = useState<RentalBookingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -146,7 +148,7 @@ export const AdminReturns: React.FC = () => {
     if (!confirmingBooking) return;
 
     if (!condition) {
-      showToast('Please select the returned equipment condition.', 'error');
+      showToast(t('RETURN_CONDITION_REQUIRED'), 'error');
       return;
     }
 
@@ -155,11 +157,11 @@ export const AdminReturns: React.FC = () => {
       damageFeeToSend = getSelectedDamageFee();
       const maxFee = (confirmingBooking.equipment?.price || 0) * 1.5;
       if (!damageFeeToSend || damageFeeToSend <= 0) {
-        showToast('Please enter a valid positive damage fee.', 'error');
+        showToast(t('DAMAGE_FEE_INVALID'), 'error');
         return;
       }
       if (damageFeeToSend > maxFee) {
-        showToast(`Damage fee cannot exceed 1.5x equipment price (${formatCurrency(maxFee)}).`, 'error');
+        showToast(t('DAMAGE_FEE_EXCEEDS_LIMIT', { maxFee: formatCurrency(maxFee) }), 'error');
         return;
       }
     }
@@ -178,7 +180,7 @@ export const AdminReturns: React.FC = () => {
     } catch (err: unknown) {
       const msg = getErrorMessage(err);
       if (msg.includes('already processed') || msg.includes('409')) {
-        showToast('This return was already processed by another administrator.', 'warning');
+        showToast(t('RETURN_ALREADY_PROCESSED'), 'warning');
         handleCloseConfirmModal();
         fetchReturns();
       } else {
@@ -207,7 +209,7 @@ export const AdminReturns: React.FC = () => {
     if (!rejectingBooking) return;
 
     if (!rejectionReason.trim()) {
-      showToast('Please provide a reason for rejecting the return request.', 'error');
+      showToast(t('RETURN_REJECTION_REASON_REQUIRED'), 'error');
       return;
     }
 
@@ -216,13 +218,13 @@ export const AdminReturns: React.FC = () => {
       await returnApi.rejectReturn(rejectingBooking.id, {
         rejectionReason: rejectionReason.trim(),
       });
-      showToast(`Return request for Booking #${rejectingBooking.id} rejected.`, 'success');
+      showToast(t('RETURN_REQUEST_REJECTED', { id: rejectingBooking.id }), 'success');
       handleCloseRejectModal();
       fetchReturns();
     } catch (err: unknown) {
       const msg = getErrorMessage(err);
       if (msg.includes('already processed') || msg.includes('409')) {
-        showToast('This return was already processed by another administrator.', 'warning');
+        showToast(t('RETURN_ALREADY_PROCESSED'), 'warning');
         handleCloseRejectModal();
         fetchReturns();
       } else {

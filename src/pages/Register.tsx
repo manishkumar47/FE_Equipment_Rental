@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { authApi } from '../api/auth.api';
@@ -25,6 +26,7 @@ export const Register: React.FC = () => {
   const location = useLocation();
   const { login } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const from =
     (location.state as { from?: { pathname: string } })?.from?.pathname ||
@@ -157,7 +159,7 @@ export const Register: React.FC = () => {
       setTooManyAttempts(false);
       setSessionExpired(false);
       setStep('otp');
-      showToast('Verification code sent to your email!', 'success');
+      showToast(t('VERIFICATION_CODE_SENT'), 'success');
     } catch (err: unknown) {
       const retryAfter = getRetryAfterSeconds(err);
       const msg = retryAfter
@@ -244,7 +246,7 @@ export const Register: React.FC = () => {
     try {
       const session = await authApi.signupVerify(email.trim(), fullCode);
       login(session);
-      showToast(`Welcome to EquipFlow, ${session.name}!`, 'success');
+      showToast(t('REGISTER_WELCOME', { name: session.name }), 'success');
 
       if (session.role === 'ADMIN') {
         navigate('/admin/dashboard', { replace: true });
@@ -290,7 +292,7 @@ export const Register: React.FC = () => {
       setResendCooldown(120);
       setTooManyAttempts(false);
       setSessionExpired(false);
-      showToast('A new 4-digit verification code has been sent!', 'success');
+      showToast(t('VERIFICATION_CODE_RESENT'), 'success');
       setTimeout(() => {
         inputRefs.current[0]?.focus();
       }, 50);

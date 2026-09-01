@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { fineApi } from '../api/fine.api';
 import { useToast } from '../context/ToastContext';
 import { getErrorMessage } from '../api/client';
@@ -46,6 +47,7 @@ function daysUntil(dateString: string | null): number | null {
 }
 
 export const MyFines: React.FC = () => {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [fines, setFines] = useState<MyFineEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,7 +79,7 @@ export const MyFines: React.FC = () => {
     setIsPaying(true);
     try {
       await fineApi.pay(payingFine.fine.id);
-      showToast(`Fine #${payingFine.fine.id} marked as paid.`, 'success');
+      showToast(t('FINE_MARKED_AS_PAID', { id: payingFine.fine.id }), 'success');
       setFines((prev) =>
         prev.map((f) =>
           f.fine.id === payingFine.fine.id ? { ...f, fine: { ...f.fine, status: 'paid' } } : f

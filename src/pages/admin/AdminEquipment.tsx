@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { equipmentApi } from "../../api/equipment.api";
 import { useToast } from "../../context/ToastContext";
 import { getErrorMessage } from "../../api/client";
@@ -34,6 +35,7 @@ import { categoryApi } from "../../api/category.api";
 
 export const AdminEquipment: React.FC = () => {
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const [equipments, setEquipments] = useState<EquipmentItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -157,7 +159,10 @@ export const AdminEquipment: React.FC = () => {
 
     if (result.valid.length === 0) {
       showToast(
-        `No valid rows to import — ${result.errors.length} error(s), ${result.duplicatesInFile.length} duplicate(s). Check browser console for details.`,
+        t("IMPORT_NO_VALID_ROWS", {
+          errorCount: result.errors.length,
+          duplicateCount: result.duplicatesInFile.length,
+        }),
         "error",
       );
       return;
@@ -176,7 +181,7 @@ export const AdminEquipment: React.FC = () => {
 
   const handleBulkImportConfirm = async () => {
     if (!bulkImportCategoryId) {
-      showToast("Please select a category for the imported equipment.", "error");
+      showToast(t("IMPORT_CATEGORY_REQUIRED"), "error");
       return;
     }
 
@@ -194,7 +199,7 @@ export const AdminEquipment: React.FC = () => {
       const created = await equipmentApi.bulkCreate(items);
 
       showToast(
-        `Successfully imported ${created.length} equipment item(s) into inventory!`,
+        t("IMPORT_SUCCESS", { count: created.length }),
         "success",
       );
 
@@ -264,7 +269,7 @@ export const AdminEquipment: React.FC = () => {
               : eq,
           ),
         );
-        showToast("Equipment updated successfully", "success");
+        showToast(t("EQUIPMENT_UPDATED_SUCCESSFULLY"), "success");
       } else {
         // Create
         const created = await equipmentApi.create({
@@ -277,7 +282,7 @@ export const AdminEquipment: React.FC = () => {
         });
 
         setEquipments((prev) => [created, ...prev]);
-        showToast("Equipment added to fleet catalog", "success");
+        showToast(t("EQUIPMENT_CREATED_SUCCESSFULLY"), "success");
       }
       setIsModalOpen(false);
     } catch (err: unknown) {
@@ -296,7 +301,7 @@ export const AdminEquipment: React.FC = () => {
       setEquipments((prev) =>
         prev.filter((item) => item.id !== deletingItem.id),
       );
-      showToast("Equipment soft-deleted from catalog", "success");
+      showToast(t("EQUIPMENT_DELETED_SUCCESSFULLY"), "success");
       setDeletingItem(null);
     } catch (err: unknown) {
       showToast(getErrorMessage(err), "error");

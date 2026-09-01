@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../context/ToastContext';
 import { authApi } from '../api/auth.api';
 import { getErrorMessage } from '../api/client';
@@ -9,6 +10,7 @@ import { Mail, ArrowLeft, Send, CheckCircle2 } from 'lucide-react';
 
 export const ForgotPassword: React.FC = () => {
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -28,7 +30,7 @@ export const ForgotPassword: React.FC = () => {
     try {
       await authApi.forgotPassword(trimmedEmail);
       setIsSubmitted(true);
-      showToast('Password reset link sent to your email.', 'success');
+      showToast(t('PASSWORD_RESET_LINK_SENT'), 'success');
     } catch (err: unknown) {
       const msg = getErrorMessage(err);
       setError(msg);

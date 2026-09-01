@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { bookingApi } from '../../api/booking.api';
 import { useToast } from '../../context/ToastContext';
 import { getErrorMessage } from '../../api/client';
@@ -30,6 +31,7 @@ import {
 
 export const AdminBookings: React.FC = () => {
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const [bookings, setBookings] = useState<RentalBookingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,7 +89,7 @@ export const AdminBookings: React.FC = () => {
     try {
       await bookingApi.delete(cancellingBooking.id);
       setBookings((prev) => prev.filter((b) => b.id !== cancellingBooking.id));
-      showToast(`Booking #${cancellingBooking.id} cancelled successfully`, 'success');
+      showToast(t('BOOKING_CANCELLED_SUCCESSFULLY', { id: cancellingBooking.id }), 'success');
       setCancellingBooking(null);
     } catch (err: unknown) {
       showToast(getErrorMessage(err), 'error');
