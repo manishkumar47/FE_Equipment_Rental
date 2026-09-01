@@ -4,6 +4,7 @@ import type {
   EquipmentItem,
   CreateEquipmentPayload,
   UpdateEquipmentPayload,
+  BulkCreateEquipmentItem,
 } from '../types/api.types';
 
 export const equipmentApi = {
@@ -22,6 +23,11 @@ export const equipmentApi = {
     return res.data.data;
   },
 
+  bulkCreate: async (items: BulkCreateEquipmentItem[]): Promise<EquipmentItem[]> => {
+    const res = await apiClient.post<ApiResponse<EquipmentItem[]>>('/equipments/bulk', { items });
+    return res.data.data || [];
+  },
+
   update: async (id: number, data: UpdateEquipmentPayload): Promise<EquipmentItem> => {
     const res = await apiClient.put<ApiResponse<EquipmentItem>>(`/equipments/${id}`, data);
     return res.data.data;
@@ -32,3 +38,4 @@ export const equipmentApi = {
     return res.data.message;
   },
 };
+

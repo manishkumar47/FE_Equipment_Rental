@@ -64,3 +64,9 @@ export function getErrorMessage(error: unknown): string {
   }
   return 'An unexpected error occurred. Please try again.';
 }
+export function getRetryAfterSeconds(error: unknown): number | null {
+  if (axios.isAxiosError(error) && error.response?.status === 429) {
+    return error.response.data?.data?.retryAfterSeconds ?? null;
+  }
+  return null;
+}

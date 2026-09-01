@@ -51,6 +51,8 @@ export function calculateRentalDays(startDate: string | Date, endDate: string | 
 }
 
 export type BookingStatus =
+  | 'REQUESTED'
+  | 'REJECTED'
   | 'ACTIVE'
   | 'UPCOMING'
   | 'OVERDUE'
@@ -68,6 +70,12 @@ export function getBookingStatus(
   }
   if (dbStatus === 'return_requested') {
     return 'RETURN_REQUESTED';
+  }
+  if (dbStatus === 'requested') {
+    return 'REQUESTED';
+  }
+  if (dbStatus === 'rejected') {
+    return 'REJECTED';
   }
 
   const now = new Date();

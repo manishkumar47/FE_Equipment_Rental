@@ -96,7 +96,7 @@ export interface RentalBookingItem {
   quantity: number;
   userId: number;
   equipmentId: number;
-  status?: 'active' | 'return_requested' | 'returned';
+  status?: 'requested' | 'rejected' | 'active' | 'return_requested' | 'returned';
   returnRequestedAt?: string | null;
   returnedAt?: string | null;
   returnCondition?: 'good' | 'damaged' | 'lost' | null;
@@ -207,5 +207,38 @@ export interface ConfirmReturnResponse {
 
 export interface RejectReturnPayload {
   rejectionReason: string;
+}
+
+export interface RejectBookingRequestPayload {
+  rejectionReason: string;
+}
+
+export type FineStatus = 'unpaid' | 'paid' | 'waived';
+
+export interface Fine {
+  id: number;
+  rentalBookingId: number;
+  userId: number;
+  amount: number;
+  daysLate: number;
+  reason: string | null;
+  status: FineStatus;
+  createdAt: string;
+  dueDate: string | null;
+  resolvedAt: string | null;
+}
+
+export interface MyFineEntry {
+  fine: Fine;
+  booking: {
+    id: number;
+    rentFrom: string;
+    rentTo: string;
+  };
+  equipment: {
+    id: number;
+    name: string;
+    imageUrl?: string | null;
+  };
 }
 
