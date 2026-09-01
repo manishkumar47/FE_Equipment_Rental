@@ -1,8 +1,10 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AppLayout } from '../components/layout/AppLayout';
 import { AuthLayout } from '../components/layout/AuthLayout';
 import { ProtectedRoute } from './ProtectedRoute';
+import { useLocale } from '../i18n/useLocale';
+import { isSupportedLocale, type LocaleCode } from '../i18n/locales';
 
 // Auth Pages
 import { Login } from '../pages/Login';
@@ -28,9 +30,38 @@ import { AdminUsers } from '../pages/admin/AdminUsers';
 // 404
 import { NotFound } from '../pages/NotFound';
 
+/**
+ * The single place locale is resolved from the URL (see i18n bug #4 - no
+ * controller/page should re-derive it another way). A leading /en, /in or
+ * /jp segment sets the active locale and is stripped before matching routes,
+ * so every <Route path> below is written without a locale prefix. An
+ * unprefixed path (e.g. /equipment) is left untouched and keeps whichever
+ * locale is currently active (defaultLocale on first load) rather than
+ * resetting on every internal navigation.
+ */
+function useLocaleResolvedLocation() {
+  const location = useLocation();
+  const { setLocale } = useLocale();
+
+  const segments = location.pathname.split('/').filter(Boolean);
+  const maybeLocale = segments[0];
+  const hasLocalePrefix = maybeLocale !== undefined && isSupportedLocale(maybeLocale);
+
+  useEffect(() => {
+    if (hasLocalePrefix) setLocale(maybeLocale as LocaleCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasLocalePrefix, maybeLocale]);
+
+  if (!hasLocalePrefix) return location;
+
+  const strippedPathname = '/' + segments.slice(1).join('/');
+  return { ...location, pathname: strippedPathname || '/' };
+}
+
 export const AppRoutes: React.FC = () => {
+  const resolvedLocation = useLocaleResolvedLocation();
   return (
-    <Routes>
+    <Routes location={resolvedLocation}>
       {/* Public Auth Routes */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />

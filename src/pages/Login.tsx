@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { authApi } from '../api/auth.api';
@@ -13,6 +14,7 @@ export const Login: React.FC = () => {
   const location = useLocation();
   const { login } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,7 +47,7 @@ export const Login: React.FC = () => {
     try {
       const session = await authApi.login(email.trim(), password);
       login(session);
-      showToast(`Welcome back, ${session.name}!`, 'success');
+      showToast(t('LOGIN_WELCOME_BACK', { name: session.name }), 'success');
 
       if (session.role === 'ADMIN') {
         navigate('/admin/dashboard', { replace: true });

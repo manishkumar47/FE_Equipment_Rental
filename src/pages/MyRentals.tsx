@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { bookingApi } from '../api/booking.api';
 import { returnApi } from '../api/return.api';
 import { useToast } from '../context/ToastContext';
@@ -38,6 +39,7 @@ import {
 
 export const MyRentals: React.FC = () => {
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const [bookings, setBookings] = useState<RentalBookingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +84,7 @@ export const MyRentals: React.FC = () => {
     setIsCancelling(true);
     try {
       await bookingApi.delete(cancellingBooking.id);
-      showToast(`Booking #${cancellingBooking.id} cancelled successfully`, 'success');
+      showToast(t('BOOKING_CANCELLED_SUCCESSFULLY', { id: cancellingBooking.id }), 'success');
       setBookings((prev) => prev.filter((b) => b.id !== cancellingBooking.id));
       setCancellingBooking(null);
     } catch (err: unknown) {
@@ -99,7 +101,7 @@ export const MyRentals: React.FC = () => {
     setIsRequestingReturn(true);
     try {
       const updated = await returnApi.requestReturn(returnRequestingBooking.id);
-      showToast('Return request submitted! Admin will verify condition and finalize.', 'success');
+      showToast(t('RETURN_REQUEST_SUBMITTED'), 'success');
       setBookings((prev) =>
         prev.map((b) =>
           b.id === returnRequestingBooking.id

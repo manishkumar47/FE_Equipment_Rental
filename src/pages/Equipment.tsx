@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { equipmentApi } from '../api/equipment.api';
 import { categoryApi } from '../api/category.api';
 import { bookingApi } from '../api/booking.api';
@@ -31,6 +32,7 @@ export const Equipment: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [equipments, setEquipments] = useState<EquipmentItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -119,7 +121,7 @@ export const Equipment: React.FC = () => {
   // Handle Quick Rent Trigger
   const handleOpenRentModal = (item: EquipmentItem) => {
     if (!isAuthenticated) {
-      showToast('Please sign in to rent equipment', 'info');
+      showToast(t('SIGN_IN_TO_RENT_REQUIRED'), 'info');
       navigate('/login', { state: { from: { pathname: '/equipment' } } });
       return;
     }
@@ -140,7 +142,7 @@ export const Equipment: React.FC = () => {
     if (!rentingItem) return;
 
     if (!rentFrom || !rentTo) {
-      showToast('Please select rental start and end dates', 'error');
+      showToast(t('RENTAL_DATES_REQUIRED'), 'error');
       return;
     }
 
@@ -148,17 +150,17 @@ export const Equipment: React.FC = () => {
     const endDate = new Date(rentTo);
 
     if (endDate <= startDate) {
-      showToast('End date must be after start date', 'error');
+      showToast(t('RENTAL_END_DATE_AFTER_START_DATE_REQUIRED'), 'error');
       return;
     }
 
     if (startDate < new Date()) {
-      showToast('Start date must be in the future', 'error');
+      showToast(t('RENTAL_START_DATE_FUTURE_REQUIRED'), 'error');
       return;
     }
 
     if (rentQuantity > rentingItem.quantity) {
-      showToast(`Only ${rentingItem.quantity} units currently available`, 'error');
+      showToast(t('ONLY_N_UNITS_AVAILABLE', { count: rentingItem.quantity }), 'error');
       return;
     }
 
@@ -193,7 +195,7 @@ export const Equipment: React.FC = () => {
         )
       );
 
-      showToast('Rental booked successfully!', 'success');
+      showToast(t('RENTAL_BOOKED_SUCCESSFULLY'), 'success');
       setRentingItem(null);
     } catch (err: unknown) {
       const msg = getErrorMessage(err);

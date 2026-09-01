@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -15,14 +16,15 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { isAuthenticated, isAdmin } = useAuth();
   const location = useLocation();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   if (!isAuthenticated) {
-    showToast('Please sign in to access this page', 'info');
+    showToast(t('SIGN_IN_REQUIRED'), 'info');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (requireAdmin && !isAdmin) {
-    showToast('Access restricted: Administrator privileges required', 'error');
+    showToast(t('ADMIN_ACCESS_REQUIRED'), 'error');
     return <Navigate to="/equipment" replace />;
   }
 

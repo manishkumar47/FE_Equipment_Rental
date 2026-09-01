@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { equipmentApi } from '../api/equipment.api';
 import { bookingApi } from '../api/booking.api';
 import { useAuth } from '../context/AuthContext';
@@ -28,6 +29,7 @@ export const EquipmentDetails: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [equipment, setEquipment] = useState<EquipmentItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -93,7 +95,7 @@ export const EquipmentDetails: React.FC = () => {
     e.preventDefault();
 
     if (!isAuthenticated) {
-      showToast('Please sign in to rent equipment', 'info');
+      showToast(t('SIGN_IN_TO_RENT_REQUIRED'), 'info');
       navigate('/login', { state: { from: { pathname: `/equipment/${id}` } } });
       return;
     }
@@ -101,7 +103,7 @@ export const EquipmentDetails: React.FC = () => {
     if (!equipment) return;
 
     if (!rentFrom || !rentTo) {
-      showToast('Please select valid rental start and end dates', 'error');
+      showToast(t('RENTAL_DATES_INVALID'), 'error');
       return;
     }
 
@@ -109,17 +111,17 @@ export const EquipmentDetails: React.FC = () => {
     const end = new Date(rentTo);
 
     if (end <= start) {
-      showToast('Rental end date must be after start date', 'error');
+      showToast(t('RENTAL_END_DATE_AFTER_START_DATE_REQUIRED'), 'error');
       return;
     }
 
     if (start < new Date()) {
-      showToast('Start date must be in the future', 'error');
+      showToast(t('RENTAL_START_DATE_FUTURE_REQUIRED'), 'error');
       return;
     }
 
     if (quantity > equipment.quantity) {
-      showToast(`Only ${equipment.quantity} units are available`, 'error');
+      showToast(t('ONLY_N_UNITS_AVAILABLE', { count: equipment.quantity }), 'error');
       return;
     }
 
@@ -149,7 +151,7 @@ export const EquipmentDetails: React.FC = () => {
       );
 
       setIsConfirmModalOpen(false);
-      showToast('Rental confirmed successfully!', 'success');
+      showToast(t('RENTAL_CONFIRMED_SUCCESSFULLY'), 'success');
     } catch (err: unknown) {
       const msg = getErrorMessage(err);
       showToast(msg, 'error');

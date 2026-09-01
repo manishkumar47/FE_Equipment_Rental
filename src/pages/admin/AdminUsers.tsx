@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { userApi } from '../../api/user.api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
@@ -26,6 +27,7 @@ import {
 export const AdminUsers: React.FC = () => {
   const { user: currentAuthUser } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -106,7 +108,7 @@ export const AdminUsers: React.FC = () => {
       });
 
       setUsers((prev) => [created, ...prev]);
-      showToast(`User ${created.name} created successfully`, 'success');
+      showToast(t('USER_CREATED_SUCCESSFULLY', { name: created.name }), 'success');
       setIsAddModalOpen(false);
       setFormData({ name: '', email: '', password: '' });
     } catch (err: unknown) {
@@ -121,7 +123,7 @@ export const AdminUsers: React.FC = () => {
 
     // Prevent removing own admin privileges
     if (targetUser.id === currentAuthUser?.id && newRole === 'USER') {
-      showToast('You cannot demote your own administrator account', 'warning');
+      showToast(t('CANNOT_DEMOTE_SELF'), 'warning');
       return;
     }
 
@@ -131,7 +133,7 @@ export const AdminUsers: React.FC = () => {
       setUsers((prev) =>
         prev.map((u) => (u.id === targetUser.id ? { ...u, role: updated.role } : u))
       );
-      showToast(`User role updated to ${newRole}`, 'success');
+      showToast(t('USER_ROLE_UPDATED', { role: newRole }), 'success');
     } catch (err: unknown) {
       showToast(getErrorMessage(err), 'error');
     } finally {
@@ -143,7 +145,7 @@ export const AdminUsers: React.FC = () => {
     if (!deletingUser) return;
 
     if (deletingUser.id === currentAuthUser?.id) {
-      showToast('You cannot delete your own logged-in account', 'warning');
+      showToast(t('CANNOT_DELETE_SELF'), 'warning');
       setDeletingUser(null);
       return;
     }
@@ -152,7 +154,7 @@ export const AdminUsers: React.FC = () => {
     try {
       await userApi.delete(deletingUser.id);
       setUsers((prev) => prev.filter((u) => u.id !== deletingUser.id));
-      showToast(`User ${deletingUser.name} removed successfully`, 'success');
+      showToast(t('USER_DELETED_SUCCESSFULLY', { name: deletingUser.name }), 'success');
       setDeletingUser(null);
     } catch (err: unknown) {
       showToast(getErrorMessage(err), 'error');
