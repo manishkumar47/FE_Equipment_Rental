@@ -32,6 +32,8 @@ import {
   RotateCcw,
   Clock,
   CheckCircle2,
+  Inbox,
+  XCircle,
 } from 'lucide-react';
 
 export const MyRentals: React.FC = () => {
@@ -204,6 +206,8 @@ export const MyRentals: React.FC = () => {
 
             const isReturned = booking.status === 'returned';
             const isReturnRequested = booking.status === 'return_requested';
+            const isRequested = booking.status === 'requested';
+            const isRejected = booking.status === 'rejected';
             const isActiveBooking = !booking.status || booking.status === 'active';
             const isUpcoming = status === 'UPCOMING';
 
@@ -231,7 +235,15 @@ export const MyRentals: React.FC = () => {
                           </h3>
 
                           {/* Status Badge Hierarchy */}
-                          {isReturned ? (
+                          {isRequested ? (
+                            <Badge variant="brand" size="sm">
+                              <Inbox className="w-3 h-3 mr-1" /> Awaiting Admin Approval
+                            </Badge>
+                          ) : isRejected ? (
+                            <Badge variant="danger" size="sm" className="bg-rose-50 text-rose-700 border-rose-200">
+                              <XCircle className="w-3 h-3 mr-1" /> Rejected
+                            </Badge>
+                          ) : isReturned ? (
                             <Badge variant="neutral" size="sm" className="bg-slate-100 text-slate-700">
                               <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" /> Returned
                             </Badge>
@@ -320,8 +332,8 @@ export const MyRentals: React.FC = () => {
                         Details
                       </Button>
 
-                      {/* Cancel only available for active/upcoming bookings before return requested */}
-                      {isActiveBooking && isUpcoming && (
+                      {/* Cancel available while a request is pending approval, or before an upcoming rental starts */}
+                      {(isRequested || (isActiveBooking && isUpcoming)) && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -329,7 +341,7 @@ export const MyRentals: React.FC = () => {
                           className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
                           leftIcon={<Trash2 className="w-3.5 h-3.5" />}
                         >
-                          Cancel
+                          {isRequested ? 'Withdraw Request' : 'Cancel'}
                         </Button>
                       )}
                     </div>
@@ -359,7 +371,15 @@ export const MyRentals: React.FC = () => {
                     ? 'Return Requested'
                     : selectedBooking.status === 'returned'
                     ? 'Returned'
-                    : getBookingStatus(selectedBooking.rentFrom, selectedBooking.rentTo)}
+                    : selectedBooking.status === 'requested'
+                    ? 'Awaiting Admin Approval'
+                    : selectedBooking.status === 'rejected'
+                    ? 'Rejected'
+                    : getBookingStatus(
+                        selectedBooking.rentFrom,
+                        selectedBooking.rentTo,
+                        selectedBooking.status
+                      )}
                 </span>
               </div>
 

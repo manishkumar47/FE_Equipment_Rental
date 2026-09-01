@@ -15,6 +15,8 @@ import {
   Users,
   Layers,
   RotateCcw,
+  Inbox,
+  Receipt,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -79,6 +81,20 @@ export const Navbar: React.FC = () => {
                 </Link>
               )}
 
+              {isAuthenticated && (
+                <Link
+                  to="/fines"
+                  className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+                    isActive('/fines')
+                      ? 'bg-slate-100 text-slate-900 font-semibold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <Receipt className="w-3.5 h-3.5 text-slate-500" />
+                  My Fines
+                </Link>
+              )}
+
               {/* Admin specific top links */}
               {isAuthenticated && isAdmin && (
                 <div className="flex items-center gap-1 pl-2 border-l border-slate-200 ml-1">
@@ -114,6 +130,17 @@ export const Navbar: React.FC = () => {
                   >
                     <CalendarCheck className="w-3.5 h-3.5 text-[#1E3A5F]" />
                     Bookings
+                  </Link>
+                  <Link
+                    to="/admin/booking-requests"
+                    className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+                      isActive('/admin/booking-requests')
+                        ? 'bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Inbox className="w-3.5 h-3.5 text-[#1E3A5F]" />
+                    Requests
                   </Link>
                   <Link
                     to="/admin/returns"
@@ -204,6 +231,14 @@ export const Navbar: React.FC = () => {
                           <CalendarCheck className="w-3.5 h-3.5 text-slate-500" />
                           Rental History
                         </Link>
+                        <Link
+                          to="/fines"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                        >
+                          <Receipt className="w-3.5 h-3.5 text-slate-500" />
+                          My Fines
+                        </Link>
                         {isAdmin && (
                           <Link
                             to="/admin/dashboard"
@@ -282,6 +317,16 @@ export const Navbar: React.FC = () => {
               My Rentals
             </Link>
           )}
+          {isAuthenticated && (
+            <Link
+              to="/fines"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <Receipt className="w-4 h-4 text-slate-500" />
+              My Fines
+            </Link>
+          )}
 
           {isAuthenticated && isAdmin && (
             <div className="pt-2 border-t border-slate-100 space-y-1">
@@ -311,6 +356,14 @@ export const Navbar: React.FC = () => {
               >
                 <CalendarCheck className="w-4 h-4 text-[#1E3A5F]" />
                 All Bookings
+              </Link>
+              <Link
+                to="/admin/booking-requests"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                <Inbox className="w-4 h-4 text-[#1E3A5F]" />
+                Booking Requests
               </Link>
               <Link
                 to="/admin/returns"

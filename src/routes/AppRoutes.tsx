@@ -14,12 +14,14 @@ import { ResetPassword } from '../pages/ResetPassword';
 import { Equipment } from '../pages/Equipment';
 import { EquipmentDetails } from '../pages/EquipmentDetails';
 import { MyRentals } from '../pages/MyRentals';
+import { MyFines } from '../pages/MyFines';
 import { Profile } from '../pages/Profile';
 
 // Admin Pages
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { AdminEquipment } from '../pages/admin/AdminEquipment';
 import { AdminBookings } from '../pages/admin/AdminBookings';
+import { AdminBookingRequests } from '../pages/admin/AdminBookingRequests';
 import { AdminReturns } from '../pages/admin/AdminReturns';
 import { AdminUsers } from '../pages/admin/AdminUsers';
 
@@ -56,6 +58,14 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
+          path="/fines"
+          element={
+            <ProtectedRoute>
+              <MyFines />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/profile"
           element={
             <ProtectedRoute>
@@ -86,6 +96,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute requireAdmin>
               <AdminBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/booking-requests"
+          element={
+            <ProtectedRoute requireAdmin>
+              <AdminBookingRequests />
             </ProtectedRoute>
           }
         />

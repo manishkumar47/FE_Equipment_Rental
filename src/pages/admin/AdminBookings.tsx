@@ -24,6 +24,8 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
+  Inbox,
+  XCircle,
 } from 'lucide-react';
 
 export const AdminBookings: React.FC = () => {
@@ -32,7 +34,14 @@ export const AdminBookings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<
-    'ALL' | 'ACTIVE' | 'UPCOMING' | 'OVERDUE' | 'RETURN_REQUESTED' | 'RETURNED'
+    | 'ALL'
+    | 'REQUESTED'
+    | 'REJECTED'
+    | 'ACTIVE'
+    | 'UPCOMING'
+    | 'OVERDUE'
+    | 'RETURN_REQUESTED'
+    | 'RETURNED'
   >('ALL');
 
   // Cancel / Delete State
@@ -143,6 +152,8 @@ export const AdminBookings: React.FC = () => {
                 className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
               >
                 <option value="ALL">All Statuses</option>
+                <option value="REQUESTED">Awaiting Approval</option>
+                <option value="REJECTED">Rejected</option>
                 <option value="ACTIVE">Active Rentals</option>
                 <option value="RETURN_REQUESTED">Return Requested</option>
                 <option value="RETURNED">Returned</option>
@@ -228,7 +239,17 @@ export const AdminBookings: React.FC = () => {
                           {total > 0 ? formatCurrency(total) : '—'}
                         </td>
                         <td className="px-5 py-3.5">
-                          {status === 'RETURNED' ? (
+                          {status === 'REQUESTED' ? (
+                            <Badge variant="brand" size="sm">
+                              <Inbox className="w-3 h-3 mr-1" />
+                              AWAITING APPROVAL
+                            </Badge>
+                          ) : status === 'REJECTED' ? (
+                            <Badge variant="danger" size="sm" className="bg-rose-50 text-rose-700 border-rose-200">
+                              <XCircle className="w-3 h-3 mr-1" />
+                              REJECTED
+                            </Badge>
+                          ) : status === 'RETURNED' ? (
                             <Badge variant="neutral" size="sm" className="bg-slate-100 text-slate-700 border-slate-200">
                               <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" />
                               RETURNED
