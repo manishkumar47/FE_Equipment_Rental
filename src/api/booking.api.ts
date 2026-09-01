@@ -3,6 +3,8 @@ import type {
   ApiResponse,
   RentalBookingItem,
   CreateBookingPayload,
+  PaginatedResponse,
+  BookingStatus,
 } from '../types/api.types';
 
 export const bookingApi = {
@@ -14,6 +16,28 @@ export const bookingApi = {
   getAll: async (): Promise<RentalBookingItem[]> => {
     const res = await apiClient.get<ApiResponse<RentalBookingItem[]>>('/rental-bookings');
     return res.data.data || [];
+  },
+
+  /**
+   * Admin views all fleet bookings across every status (paginated, with search).
+   * GET /admin/rental-bookings?page=1&limit=20&search=&status=
+   */
+  getAllPaginated: async (
+    page = 1,
+    limit = 20,
+    search?: string,
+    status?: BookingStatus
+  ): Promise<PaginatedResponse<RentalBookingItem>> => {
+    const params = new URLSearchParams();
+    params.set('page', page.toString());
+    params.set('limit', limit.toString());
+    if (search && search.trim()) params.set('search', search.trim());
+    if (status) params.set('status', status);
+
+    const res = await apiClient.get<ApiResponse<PaginatedResponse<RentalBookingItem>>>(
+      `/admin/rental-bookings?${params.toString()}`
+    );
+    return res.data.data;
   },
 
   getMyBookings: async (): Promise<RentalBookingItem[]> => {

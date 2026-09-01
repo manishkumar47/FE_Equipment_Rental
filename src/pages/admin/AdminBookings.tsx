@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { bookingApi } from '../../api/booking.api';
 import { useToast } from '../../context/ToastContext';
@@ -9,13 +9,14 @@ import {
   calculateRentalDays,
   getBookingStatus,
 } from '../../utils/formatters';
-import type { RentalBookingItem } from '../../types/api.types';
+import type { BookingStatus, RentalBookingItem } from '../../types/api.types';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Card, CardHeader, CardContent } from '../../components/ui/Card';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { Pagination } from '../../components/ui/Pagination';
 import {
   CalendarCheck,
   Search,
@@ -35,52 +36,40 @@ export const AdminBookings: React.FC = () => {
   const [bookings, setBookings] = useState<RentalBookingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<
-    | 'ALL'
-    | 'REQUESTED'
-    | 'REJECTED'
-    | 'ACTIVE'
-    | 'UPCOMING'
-    | 'OVERDUE'
-    | 'RETURN_REQUESTED'
-    | 'RETURNED'
-  >('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | BookingStatus>('ALL');
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Cancel / Delete State
   const [cancellingBooking, setCancellingBooking] = useState<RentalBookingItem | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     setIsLoading(true);
     try {
-      const items = await bookingApi.getAll();
-      setBookings(items);
+      const res = await bookingApi.getAllPaginated(
+        page,
+        limit,
+        searchQuery,
+        statusFilter === 'ALL' ? undefined : statusFilter
+      );
+      setBookings(res.data);
+      setTotal(res.total);
+      setTotalPages(res.totalPages || 1);
     } catch (err: unknown) {
       showToast(getErrorMessage(err), 'error');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, limit, searchQuery, statusFilter, showToast]);
 
   useEffect(() => {
     fetchBookings();
-  }, []);
+  }, [fetchBookings]);
 
-  const filteredBookings = useMemo(() => {
-    return bookings.filter((b) => {
-      const status = getBookingStatus(b.rentFrom, b.rentTo, b.status);
-      const matchesStatus = statusFilter === 'ALL' || status === statusFilter;
-
-      const q = searchQuery.toLowerCase();
-      const matchesSearch =
-        b.id.toString().includes(q) ||
-        (b.user?.name && b.user.name.toLowerCase().includes(q)) ||
-        (b.user?.email && b.user.email.toLowerCase().includes(q)) ||
-        (b.equipment?.name && b.equipment.name.toLowerCase().includes(q));
-
-      return matchesStatus && matchesSearch;
-    });
-  }, [bookings, searchQuery, statusFilter]);
+  const filteredBookings = bookings;
 
   const handleCancelBooking = async () => {
     if (!cancellingBooking) return;
@@ -88,9 +77,14 @@ export const AdminBookings: React.FC = () => {
     setIsCancelling(true);
     try {
       await bookingApi.delete(cancellingBooking.id);
-      setBookings((prev) => prev.filter((b) => b.id !== cancellingBooking.id));
       showToast(t('BOOKING_CANCELLED_SUCCESSFULLY', { id: cancellingBooking.id }), 'success');
       setCancellingBooking(null);
+      // If this was the last item on a page beyond the first, step back a page.
+      if (bookings.length === 1 && page > 1) {
+        setPage((p) => p - 1);
+      } else {
+        await fetchBookings();
+      }
     } catch (err: unknown) {
       showToast(getErrorMessage(err), 'error');
     } finally {
@@ -120,7 +114,7 @@ export const AdminBookings: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchBookings}
+            onClick={() => fetchBookings()}
             disabled={isLoading}
             leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
           >
@@ -140,7 +134,10 @@ export const AdminBookings: React.FC = () => {
                 type="text"
                 placeholder="Search by customer, equipment, or booking #..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(1);
+                }}
                 className="w-full pl-10 pr-4 py-1.5 text-xs rounded-md border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F]"
               />
             </div>
@@ -150,23 +147,24 @@ export const AdminBookings: React.FC = () => {
               <Filter className="w-3.5 h-3.5 text-slate-400" />
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as typeof statusFilter);
+                  setPage(1);
+                }}
                 className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
               >
                 <option value="ALL">All Statuses</option>
-                <option value="REQUESTED">Awaiting Approval</option>
-                <option value="REJECTED">Rejected</option>
-                <option value="ACTIVE">Active Rentals</option>
-                <option value="RETURN_REQUESTED">Return Requested</option>
-                <option value="RETURNED">Returned</option>
-                <option value="OVERDUE">Overdue</option>
-                <option value="UPCOMING">Upcoming</option>
+                <option value="requested">Awaiting Approval</option>
+                <option value="rejected">Rejected</option>
+                <option value="active">Active (incl. upcoming &amp; overdue)</option>
+                <option value="return_requested">Return Requested</option>
+                <option value="returned">Returned</option>
               </select>
             </div>
           </div>
 
           <span className="text-xs text-slate-500 font-medium self-end sm:self-center">
-            {filteredBookings.length} total entries
+            {total} total entries
           </span>
         </CardHeader>
 
@@ -190,6 +188,7 @@ export const AdminBookings: React.FC = () => {
               onAction={() => {
                 setSearchQuery('');
                 setStatusFilter('ALL');
+                setPage(1);
               }}
             />
           ) : (
@@ -296,6 +295,7 @@ export const AdminBookings: React.FC = () => {
               </table>
             </div>
           )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={isLoading} />
         </CardContent>
       </Card>
 

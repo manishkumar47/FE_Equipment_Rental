@@ -11,6 +11,7 @@ import { Card, CardHeader, CardContent } from '../../components/ui/Card';
 import { Modal } from '../../components/ui/Modal';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { Pagination } from '../../components/ui/Pagination';
 import {
   Inbox,
   Search,
@@ -18,8 +19,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 
 export const AdminBookingRequests: React.FC = () => {
@@ -272,34 +271,7 @@ export const AdminBookingRequests: React.FC = () => {
             </div>
           )}
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-3.5 border-t border-slate-200 bg-slate-50/50">
-              <span className="text-xs text-slate-500">
-                Page <span className="font-semibold text-slate-800">{page}</span> of{' '}
-                <span className="font-semibold text-slate-800">{totalPages}</span>
-              </span>
-              <div className="flex items-center gap-1.5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1 || isLoading}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  leftIcon={<ChevronLeft className="w-3.5 h-3.5" />}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= totalPages || isLoading}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  rightIcon={<ChevronRight className="w-3.5 h-3.5" />}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={isLoading} />
         </CardContent>
       </Card>
 

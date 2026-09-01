@@ -89,6 +89,10 @@ export interface UpdateEquipmentUnitPayload {
   conditionNotes?: string;
 }
 
+export type EquipmentSortBy = 'name_asc' | 'price_asc' | 'price_desc' | 'stock_desc';
+
+export type BookingStatus = 'requested' | 'rejected' | 'active' | 'return_requested' | 'returned';
+
 export interface RentalBookingItem {
   id: number;
   rentFrom: string;
@@ -96,7 +100,7 @@ export interface RentalBookingItem {
   quantity: number;
   userId: number;
   equipmentId: number;
-  status?: 'requested' | 'rejected' | 'active' | 'return_requested' | 'returned';
+  status?: BookingStatus;
   returnRequestedAt?: string | null;
   returnedAt?: string | null;
   returnCondition?: 'good' | 'damaged' | 'lost' | null;
