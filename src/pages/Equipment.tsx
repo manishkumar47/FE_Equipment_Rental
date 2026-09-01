@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { equipmentApi } from '../api/equipment.api';
@@ -9,11 +9,13 @@ import { useToast } from '../context/ToastContext';
 import { getErrorMessage } from '../api/client';
 import { formatCurrency, calculateRentalDays } from '../utils/formatters';
 import { getEquipmentIcon } from '../utils/categoryIcons';
-import type { EquipmentItem, Category } from '../types/api.types';
+import { useInfiniteScrollSentinel } from '../hooks/useInfiniteScrollSentinel';
+import type { EquipmentItem, Category, EquipmentSortBy } from '../types/api.types';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Card, CardContent } from '../components/ui/Card';
 import { Skeleton } from '../components/ui/Skeleton';
+import { Spinner } from '../components/ui/Spinner';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Modal } from '../components/ui/Modal';
 import {
@@ -28,6 +30,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+const PAGE_SIZE = 24;
+
 export const Equipment: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -36,13 +40,18 @@ export const Equipment: React.FC = () => {
 
   const [equipments, setEquipments] = useState<EquipmentItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
-  const [sortBy, setSortBy] = useState<'name_asc' | 'price_asc' | 'price_desc' | 'stock_desc'>('name_asc');
+  const [sortBy, setSortBy] = useState<EquipmentSortBy>('name_asc');
   const [inStockOnly, setInStockOnly] = useState(false);
 
   // Quick Rent Modal State
@@ -61,62 +70,66 @@ export const Equipment: React.FC = () => {
     rentTo: string;
   } | null>(null);
 
-  const fetchCatalogData = async () => {
-    setIsLoading(true);
-    setError(null);
+  // Debounce free-text search before it drives a server request
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    categoryApi
+      .getAll()
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, []);
+
+  const fetchPage = async (pageToLoad: number, isReset: boolean) => {
+    if (isReset) {
+      setIsLoading(true);
+      setError(null);
+    } else {
+      setIsLoadingMore(true);
+    }
     try {
-      const [items, cats] = await Promise.all([
-        equipmentApi.getAll(),
-        categoryApi.getAll().catch(() => []),
-      ]);
-      setEquipments(items);
-      setCategories(cats);
+      const categoryId =
+        selectedCategory !== 'ALL' && !isNaN(Number(selectedCategory))
+          ? Number(selectedCategory)
+          : undefined;
+
+      const res = await equipmentApi.getPaginated({
+        page: pageToLoad,
+        limit: PAGE_SIZE,
+        search: debouncedSearch || undefined,
+        categoryId,
+        inStockOnly,
+        sortBy,
+      });
+
+      setTotal(res.total);
+      setPage(res.page);
+      setHasMore(res.page < res.totalPages);
+      setEquipments((prev) => (isReset ? res.data : [...prev, ...res.data]));
     } catch (err: unknown) {
       const msg = getErrorMessage(err);
       setError(msg);
       showToast(msg, 'error');
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
+  // Reset to page 1 and refetch whenever a filter/search/sort changes
   useEffect(() => {
-    fetchCatalogData();
-  }, []);
+    fetchPage(1, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, selectedCategory, sortBy, inStockOnly]);
 
-  // Filtered & Sorted Equipment
-  const filteredEquipments = useMemo(() => {
-    return equipments
-      .filter((item) => {
-        // Search
-        const matchesSearch =
-          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+  const sentinelRef = useInfiniteScrollSentinel(() => {
+    fetchPage(page + 1, false);
+  }, hasMore && !isLoading && !isLoadingMore);
 
-        // In stock
-        const matchesStock = inStockOnly ? item.quantity > 0 : true;
-
-        // Category filter if applicable
-        let matchesCategory = true;
-        if (selectedCategory !== 'ALL') {
-          // If category name matches item name/type or categoryId
-          const catId = Number(selectedCategory);
-          if (!isNaN(catId)) {
-            matchesCategory = item.equipmentCategoryId === catId;
-          } else {
-            matchesCategory = item.name.toLowerCase().includes(selectedCategory.toLowerCase());
-          }
-        }
-
-        return matchesSearch && matchesStock && matchesCategory;
-      })
-      .sort((a, b) => {
-        if (sortBy === 'price_asc') return a.price - b.price;
-        if (sortBy === 'price_desc') return b.price - a.price;
-        if (sortBy === 'stock_desc') return b.quantity - a.quantity;
-        return a.name.localeCompare(b.name);
-      });
-  }, [equipments, searchQuery, selectedCategory, sortBy, inStockOnly]);
+  const filteredEquipments = equipments;
 
   // Handle Quick Rent Trigger
   const handleOpenRentModal = (item: EquipmentItem) => {
@@ -215,7 +228,7 @@ export const Equipment: React.FC = () => {
               <Sparkles className="w-3 h-3 mr-1" /> Enterprise Inventory
             </Badge>
             <span className="text-xs text-slate-400 font-medium">
-              {equipments.length} models available
+              {total} model{total === 1 ? '' : 's'} found
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 leading-tight">
@@ -294,38 +307,22 @@ export const Equipment: React.FC = () => {
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            All Hardware ({equipments.length})
+            All Hardware
           </button>
 
-          {categories.length > 0
-            ? categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(String(cat.id))}
-                  className={`px-3 py-1 rounded-md font-medium transition-colors shrink-0 ${
-                    selectedCategory === String(cat.id)
-                      ? 'bg-[#1E3A5F] text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))
-            : ['Laptop', 'MacBook', 'Monitor', 'Camera', 'Microphone', 'Speaker', 'Headphones', 'Tablet', 'Router', 'UPS'].map(
-                (preset) => (
-                  <button
-                    key={preset}
-                    onClick={() => setSelectedCategory(preset)}
-                    className={`px-3 py-1 rounded-md font-medium transition-colors shrink-0 ${
-                      selectedCategory === preset
-                        ? 'bg-[#1E3A5F] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {preset}
-                  </button>
-                )
-              )}
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(String(cat.id))}
+              className={`px-3 py-1 rounded-md font-medium transition-colors shrink-0 ${
+                selectedCategory === String(cat.id)
+                  ? 'bg-[#1E3A5F] text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -354,7 +351,7 @@ export const Equipment: React.FC = () => {
           <AlertCircle className="w-8 h-8 text-rose-600 mx-auto mb-2" />
           <h3 className="text-base font-semibold text-rose-900 mb-1">Failed to Load Equipment</h3>
           <p className="text-xs text-rose-600 mb-4">{error}</p>
-          <Button variant="primary" size="sm" onClick={fetchCatalogData}>
+          <Button variant="primary" size="sm" onClick={() => fetchPage(1, true)}>
             Retry Request
           </Button>
         </div>
@@ -463,6 +460,18 @@ export const Equipment: React.FC = () => {
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {/* Infinite scroll sentinel + loading-more indicator */}
+      {!isLoading && !error && (
+        <div ref={sentinelRef} className="flex items-center justify-center py-4">
+          {isLoadingMore && <Spinner size="sm" label="Loading more equipment..." />}
+          {!hasMore && filteredEquipments.length > 0 && (
+            <p className="text-xs text-slate-400 font-medium">
+              You've reached the end — {total} model{total === 1 ? '' : 's'} total.
+            </p>
+          )}
         </div>
       )}
 

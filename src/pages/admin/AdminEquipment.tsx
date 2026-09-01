@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { equipmentApi } from "../../api/equipment.api";
 import { useToast } from "../../context/ToastContext";
@@ -15,6 +15,7 @@ import { Modal } from "../../components/ui/Modal";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { Pagination } from "../../components/ui/Pagination";
 import { validateEquipmentCsv } from "../../utils/csvValidation";
 import { EquipmentUnitsModal } from "../../components/admin/EquipmentUnitsModal";
 import {
@@ -40,6 +41,10 @@ export const AdminEquipment: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Add / Edit Modal State
@@ -85,17 +90,20 @@ export const AdminEquipment: React.FC = () => {
   // Physical Units Modal State
   const [managingUnitsItem, setManagingUnitsItem] = useState<EquipmentItem | null>(null);
 
-  const fetchEquipments = async () => {
+  const fetchEquipments = useCallback(async () => {
     setIsLoading(true);
     try {
-      const items = await equipmentApi.getAll();
-      setEquipments(items);
+      const res = await equipmentApi.getPaginated({ page, limit, search: searchQuery });
+      setEquipments(res.data);
+      setTotal(res.total);
+      setTotalPages(res.totalPages || 1);
     } catch (err: unknown) {
       showToast(getErrorMessage(err), "error");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, limit, searchQuery, showToast]);
+
   const fetchCategories = async () => {
     try {
       const items = await categoryApi.getAll();
@@ -107,18 +115,14 @@ export const AdminEquipment: React.FC = () => {
 
   useEffect(() => {
     fetchEquipments();
+  }, [fetchEquipments]);
+
+  useEffect(() => {
     fetchCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filteredEquipments = useMemo(() => {
-    return equipments.filter((item) => {
-      const q = searchQuery.toLowerCase();
-      return (
-        item.name.toLowerCase().includes(q) ||
-        (item.description && item.description.toLowerCase().includes(q))
-      );
-    });
-  }, [equipments, searchQuery]);
+  const filteredEquipments = equipments;
 
   const handleOpenAddModal = () => {
     setEditingItem(null);
@@ -208,7 +212,11 @@ export const AdminEquipment: React.FC = () => {
       setCsvValidationSummary(null);
 
       // Refresh the equipment list
-      await fetchEquipments();
+      if (page === 1) {
+        await fetchEquipments();
+      } else {
+        setPage(1);
+      }
     } catch (err: unknown) {
       showToast(getErrorMessage(err), "error");
     } finally {
@@ -281,8 +289,13 @@ export const AdminEquipment: React.FC = () => {
           categoryId: Number(formData.categoryId),
         });
 
-        setEquipments((prev) => [created, ...prev]);
+        void created;
         showToast(t("EQUIPMENT_CREATED_SUCCESSFULLY"), "success");
+        if (page === 1) {
+          await fetchEquipments();
+        } else {
+          setPage(1);
+        }
       }
       setIsModalOpen(false);
     } catch (err: unknown) {
@@ -298,11 +311,14 @@ export const AdminEquipment: React.FC = () => {
     setIsDeleting(true);
     try {
       await equipmentApi.delete(deletingItem.id);
-      setEquipments((prev) =>
-        prev.filter((item) => item.id !== deletingItem.id),
-      );
       showToast(t("EQUIPMENT_DELETED_SUCCESSFULLY"), "success");
       setDeletingItem(null);
+      // If this was the last item on a page beyond the first, step back a page.
+      if (equipments.length === 1 && page > 1) {
+        setPage((p) => p - 1);
+      } else {
+        await fetchEquipments();
+      }
     } catch (err: unknown) {
       showToast(getErrorMessage(err), "error");
     } finally {
@@ -333,7 +349,7 @@ export const AdminEquipment: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchEquipments}
+            onClick={() => fetchEquipments()}
             disabled={isLoading}
             leftIcon={
               <RefreshCw
@@ -378,13 +394,16 @@ export const AdminEquipment: React.FC = () => {
               type="text"
               placeholder="Search fleet items..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
               className="w-full pl-10 pr-4 py-1.5 text-xs rounded-md border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F]"
             />
           </div>
 
           <span className="text-xs text-slate-500 font-medium self-end sm:self-center">
-            Showing {filteredEquipments.length} of {equipments.length} models
+            {total} model{total === 1 ? "" : "s"} total
           </span>
         </CardHeader>
 
@@ -407,7 +426,12 @@ export const AdminEquipment: React.FC = () => {
               }
               actionLabel={searchQuery ? "Clear Search" : "Add First Equipment"}
               onAction={
-                searchQuery ? () => setSearchQuery("") : handleOpenAddModal
+                searchQuery
+                  ? () => {
+                      setSearchQuery("");
+                      setPage(1);
+                    }
+                  : handleOpenAddModal
               }
             />
           ) : (
@@ -518,6 +542,7 @@ export const AdminEquipment: React.FC = () => {
               </table>
             </div>
           )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={isLoading} />
         </CardContent>
       </Card>
 
