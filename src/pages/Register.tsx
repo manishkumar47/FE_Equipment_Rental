@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { authApi } from '../api/auth.api';
-import { getErrorMessage } from '../api/client';
+import { getErrorMessage, getRetryAfterSeconds } from '../api/client';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import {
@@ -159,7 +159,10 @@ export const Register: React.FC = () => {
       setStep('otp');
       showToast('Verification code sent to your email!', 'success');
     } catch (err: unknown) {
-      const msg = getErrorMessage(err);
+      const retryAfter = getRetryAfterSeconds(err);
+      const msg = retryAfter
+        ? `Too many requests. Please try again in ${retryAfter} seconds.`
+        : getErrorMessage(err);
       setErrors({ general: msg });
       showToast(msg, 'error');
     } finally {
@@ -399,15 +402,13 @@ export const Register: React.FC = () => {
                   onChange={(e) => handleOtpChange(idx, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(idx, e)}
                   onPaste={idx === 0 ? handlePaste : undefined}
-                  className={`w-13 h-14 text-center text-2xl font-bold font-mono rounded-lg border transition-all outline-none ${
-                    errors.otp
+                  className={`w-13 h-14 text-center text-2xl font-bold font-mono rounded-lg border transition-all outline-none ${errors.otp
                       ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-100 bg-rose-50/30'
                       : 'border-slate-300 focus:border-[#1E3A5F] focus:ring-2 focus:ring-[#1E3A5F]/20 bg-white'
-                  } ${
-                    tooManyAttempts || expirySeconds === 0
+                    } ${tooManyAttempts || expirySeconds === 0
                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200'
                       : 'text-slate-900 shadow-sm'
-                  }`}
+                    }`}
                   aria-label={`Digit ${idx + 1}`}
                 />
               ))}
