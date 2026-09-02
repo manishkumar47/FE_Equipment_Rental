@@ -30,6 +30,61 @@ import {
   XCircle,
 } from 'lucide-react';
 
+function BookingStatusBadge({ status }: { status: ReturnType<typeof getBookingStatus> }) {
+  if (status === 'REQUESTED') {
+    return (
+      <Badge variant="brand" size="sm">
+        <Inbox className="w-3 h-3 mr-1" />
+        AWAITING APPROVAL
+      </Badge>
+    );
+  }
+  if (status === 'REJECTED') {
+    return (
+      <Badge variant="danger" size="sm" className="bg-rose-50 text-rose-700 border-rose-200">
+        <XCircle className="w-3 h-3 mr-1" />
+        REJECTED
+      </Badge>
+    );
+  }
+  if (status === 'RETURNED') {
+    return (
+      <Badge variant="neutral" size="sm" className="bg-slate-100 text-slate-700 border-slate-200">
+        <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" />
+        RETURNED
+      </Badge>
+    );
+  }
+  if (status === 'RETURN_REQUESTED') {
+    return (
+      <Badge variant="warning" size="sm" className="bg-amber-50 text-amber-800 border-amber-200">
+        <Clock className="w-3 h-3 mr-1 text-amber-600" />
+        RETURN REQUESTED
+      </Badge>
+    );
+  }
+  if (status === 'OVERDUE') {
+    return (
+      <Badge variant="danger" size="sm" className="bg-rose-50 text-rose-700 border-rose-200">
+        <AlertCircle className="w-3 h-3 mr-1" />
+        OVERDUE
+      </Badge>
+    );
+  }
+  if (status === 'ACTIVE') {
+    return (
+      <Badge variant="success" size="sm">
+        ACTIVE
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="warning" size="sm">
+      UPCOMING
+    </Badge>
+  );
+}
+
 export const AdminBookings: React.FC = () => {
   const { showToast } = useToast();
   const { t } = useTranslation();
@@ -192,108 +247,135 @@ export const AdminBookings: React.FC = () => {
               }}
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
-                  <tr>
-                    <th className="px-5 py-3.5">Booking #</th>
-                    <th className="px-5 py-3.5">Customer / User</th>
-                    <th className="px-5 py-3.5">Equipment Model</th>
-                    <th className="px-5 py-3.5 text-center">Qty</th>
-                    <th className="px-5 py-3.5">Rental Duration</th>
-                    <th className="px-5 py-3.5">Est. Total</th>
-                    <th className="px-5 py-3.5">Status</th>
-                    <th className="px-5 py-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredBookings.map((b) => {
-                    const status = getBookingStatus(b.rentFrom, b.rentTo, b.status);
-                    const days = calculateRentalDays(b.rentFrom, b.rentTo);
-                    const price = b.equipment?.price || 0;
-                    const total = price > 0 ? days * price * b.quantity : 0;
+            <>
+              {/* Desktop/tablet table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
+                    <tr>
+                      <th className="px-5 py-3.5">Booking #</th>
+                      <th className="px-5 py-3.5">Customer / User</th>
+                      <th className="px-5 py-3.5">Equipment Model</th>
+                      <th className="px-5 py-3.5 text-center">Qty</th>
+                      <th className="px-5 py-3.5">Rental Duration</th>
+                      <th className="px-5 py-3.5">Est. Total</th>
+                      <th className="px-5 py-3.5">Status</th>
+                      <th className="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredBookings.map((b) => {
+                      const status = getBookingStatus(b.rentFrom, b.rentTo, b.status);
+                      const days = calculateRentalDays(b.rentFrom, b.rentTo);
+                      const price = b.equipment?.price || 0;
+                      const total = price > 0 ? days * price * b.quantity : 0;
 
-                    return (
-                      <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="px-5 py-3.5 font-mono font-bold text-slate-600">
-                          #{b.id}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <p className="font-semibold text-slate-900">
-                            {b.user?.name || `User #${b.userId}`}
-                          </p>
-                          <p className="text-[11px] text-slate-500">{b.user?.email || '—'}</p>
-                        </td>
-                        <td className="px-5 py-3.5 font-medium text-slate-800">
+                      return (
+                        <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="px-5 py-3.5 font-mono font-bold text-slate-600">
+                            #{b.id}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <p className="font-semibold text-slate-900">
+                              {b.user?.name || `User #${b.userId}`}
+                            </p>
+                            <p className="text-[11px] text-slate-500">{b.user?.email || '—'}</p>
+                          </td>
+                          <td className="px-5 py-3.5 font-medium text-slate-800">
+                            {b.equipment?.name || `Equipment #${b.equipmentId}`}
+                          </td>
+                          <td className="px-5 py-3.5 text-center font-semibold text-slate-800">
+                            {b.quantity}
+                          </td>
+                          <td className="px-5 py-3.5 whitespace-nowrap">
+                            <p className="text-slate-700 font-medium">
+                              {formatDate(b.rentFrom)} &rarr; {formatDate(b.rentTo)}
+                            </p>
+                            <p className="text-[11px] text-slate-400 font-normal">{days} day(s)</p>
+                          </td>
+                          <td className="px-5 py-3.5 font-bold text-[#1E3A5F]">
+                            {total > 0 ? formatCurrency(total) : '—'}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <BookingStatusBadge status={status} />
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            {status !== 'RETURNED' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setCancellingBooking(b)}
+                                className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                                aria-label="Cancel booking"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile card list */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {filteredBookings.map((b) => {
+                  const status = getBookingStatus(b.rentFrom, b.rentTo, b.status);
+                  const days = calculateRentalDays(b.rentFrom, b.rentTo);
+                  const price = b.equipment?.price || 0;
+                  const total = price > 0 ? days * price * b.quantity : 0;
+
+                  return (
+                    <div key={b.id} className="p-4 space-y-2.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="font-mono font-bold text-slate-600 text-xs">#{b.id}</span>
+                        <BookingStatusBadge status={status} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-slate-900">
+                          {b.user?.name || `User #${b.userId}`}
+                        </p>
+                        <p className="text-[11px] text-slate-500">{b.user?.email || '—'}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-y-1.5 text-[11px]">
+                        <span className="text-slate-500">Equipment</span>
+                        <span className="text-right font-medium text-slate-800">
                           {b.equipment?.name || `Equipment #${b.equipmentId}`}
-                        </td>
-                        <td className="px-5 py-3.5 text-center font-semibold text-slate-800">
-                          {b.quantity}
-                        </td>
-                        <td className="px-5 py-3.5 whitespace-nowrap">
-                          <p className="text-slate-700 font-medium">
-                            {formatDate(b.rentFrom)} &rarr; {formatDate(b.rentTo)}
-                          </p>
-                          <p className="text-[11px] text-slate-400 font-normal">{days} day(s)</p>
-                        </td>
-                        <td className="px-5 py-3.5 font-bold text-[#1E3A5F]">
+                        </span>
+
+                        <span className="text-slate-500">Qty</span>
+                        <span className="text-right font-semibold text-slate-800">{b.quantity}</span>
+
+                        <span className="text-slate-500">Duration</span>
+                        <span className="text-right text-slate-700">
+                          {formatDate(b.rentFrom)} &rarr; {formatDate(b.rentTo)} ({days}d)
+                        </span>
+
+                        <span className="text-slate-500">Est. Total</span>
+                        <span className="text-right font-bold text-[#1E3A5F]">
                           {total > 0 ? formatCurrency(total) : '—'}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          {status === 'REQUESTED' ? (
-                            <Badge variant="brand" size="sm">
-                              <Inbox className="w-3 h-3 mr-1" />
-                              AWAITING APPROVAL
-                            </Badge>
-                          ) : status === 'REJECTED' ? (
-                            <Badge variant="danger" size="sm" className="bg-rose-50 text-rose-700 border-rose-200">
-                              <XCircle className="w-3 h-3 mr-1" />
-                              REJECTED
-                            </Badge>
-                          ) : status === 'RETURNED' ? (
-                            <Badge variant="neutral" size="sm" className="bg-slate-100 text-slate-700 border-slate-200">
-                              <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" />
-                              RETURNED
-                            </Badge>
-                          ) : status === 'RETURN_REQUESTED' ? (
-                            <Badge variant="warning" size="sm" className="bg-amber-50 text-amber-800 border-amber-200">
-                              <Clock className="w-3 h-3 mr-1 text-amber-600" />
-                              RETURN REQUESTED
-                            </Badge>
-                          ) : status === 'OVERDUE' ? (
-                            <Badge variant="danger" size="sm" className="bg-rose-50 text-rose-700 border-rose-200">
-                              <AlertCircle className="w-3 h-3 mr-1" />
-                              OVERDUE
-                            </Badge>
-                          ) : status === 'ACTIVE' ? (
-                            <Badge variant="success" size="sm">
-                              ACTIVE
-                            </Badge>
-                          ) : (
-                            <Badge variant="warning" size="sm">
-                              UPCOMING
-                            </Badge>
-                          )}
-                        </td>
-                        <td className="px-5 py-3.5 text-right">
-                          {status !== 'RETURNED' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setCancellingBooking(b)}
-                              className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                              aria-label="Cancel booking"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </span>
+                      </div>
+                      {status !== 'RETURNED' && (
+                        <div className="flex justify-end pt-1 border-t border-slate-100">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCancellingBooking(b)}
+                            className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                            leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                          >
+                            Cancel Booking
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={isLoading} />
         </CardContent>

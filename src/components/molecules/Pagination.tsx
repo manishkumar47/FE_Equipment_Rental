@@ -18,7 +18,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between px-6 py-3.5 border-t border-slate-200 bg-slate-50/50">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 px-4 sm:px-6 py-3.5 border-t border-slate-200 bg-slate-50/50">
       <span className="text-xs text-slate-500">
         Page <span className="font-semibold text-slate-800">{page}</span> of{' '}
         <span className="font-semibold text-slate-800">{totalPages}</span>

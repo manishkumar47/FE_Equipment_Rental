@@ -227,56 +227,96 @@ export const AdminDashboard: React.FC = () => {
                 No bookings recorded in the system yet.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-100">
-                    <tr>
-                      <th className="px-4 py-3">ID</th>
-                      <th className="px-4 py-3">Equipment</th>
-                      <th className="px-4 py-3">User</th>
-                      <th className="px-4 py-3">Period</th>
-                      <th className="px-4 py-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {bookings.slice(0, 5).map((booking) => {
-                      const status = getBookingStatus(booking.rentFrom, booking.rentTo, booking.status);
-                      return (
-                        <tr key={booking.id} className="hover:bg-slate-50/70 transition-colors">
-                          <td className="px-4 py-3 font-mono font-bold text-slate-600">
+              <>
+                {/* Desktop/tablet table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-100">
+                      <tr>
+                        <th className="px-4 py-3">ID</th>
+                        <th className="px-4 py-3">Equipment</th>
+                        <th className="px-4 py-3">User</th>
+                        <th className="px-4 py-3">Period</th>
+                        <th className="px-4 py-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {bookings.slice(0, 5).map((booking) => {
+                        const status = getBookingStatus(booking.rentFrom, booking.rentTo, booking.status);
+                        return (
+                          <tr key={booking.id} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="px-4 py-3 font-mono font-bold text-slate-600">
+                              #{booking.id}
+                            </td>
+                            <td className="px-4 py-3 font-medium text-slate-900">
+                              {booking.equipment?.name || `ID #${booking.equipmentId}`}
+                            </td>
+                            <td className="px-4 py-3 text-slate-600">
+                              {booking.user?.name || `User #${booking.userId}`}
+                            </td>
+                            <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
+                              {formatDate(booking.rentFrom)}
+                            </td>
+                            <td className="px-4 py-3">
+                              <Badge
+                                variant={
+                                  status === 'ACTIVE'
+                                    ? 'success'
+                                    : status === 'UPCOMING'
+                                    ? 'warning'
+                                    : status === 'OVERDUE'
+                                    ? 'danger'
+                                    : 'neutral'
+                                }
+                                size="sm"
+                              >
+                                {status}
+                              </Badge>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile card list */}
+                <div className="md:hidden divide-y divide-slate-100">
+                  {bookings.slice(0, 5).map((booking) => {
+                    const status = getBookingStatus(booking.rentFrom, booking.rentTo, booking.status);
+                    return (
+                      <div key={booking.id} className="px-4 py-3 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono font-bold text-slate-600 text-xs">
                             #{booking.id}
-                          </td>
-                          <td className="px-4 py-3 font-medium text-slate-900">
-                            {booking.equipment?.name || `ID #${booking.equipmentId}`}
-                          </td>
-                          <td className="px-4 py-3 text-slate-600">
-                            {booking.user?.name || `User #${booking.userId}`}
-                          </td>
-                          <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
-                            {formatDate(booking.rentFrom)}
-                          </td>
-                          <td className="px-4 py-3">
-                            <Badge
-                              variant={
-                                status === 'ACTIVE'
-                                  ? 'success'
-                                  : status === 'UPCOMING'
-                                  ? 'warning'
-                                  : status === 'OVERDUE'
-                                  ? 'danger'
-                                  : 'neutral'
-                              }
-                              size="sm"
-                            >
-                              {status}
-                            </Badge>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                          </span>
+                          <Badge
+                            variant={
+                              status === 'ACTIVE'
+                                ? 'success'
+                                : status === 'UPCOMING'
+                                ? 'warning'
+                                : status === 'OVERDUE'
+                                ? 'danger'
+                                : 'neutral'
+                            }
+                            size="sm"
+                          >
+                            {status}
+                          </Badge>
+                        </div>
+                        <p className="text-xs font-medium text-slate-900">
+                          {booking.equipment?.name || `ID #${booking.equipmentId}`}
+                        </p>
+                        <div className="flex items-center justify-between text-[11px] text-slate-500">
+                          <span>{booking.user?.name || `User #${booking.userId}`}</span>
+                          <span>{formatDate(booking.rentFrom)}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -309,9 +349,9 @@ export const AdminDashboard: React.FC = () => {
             ) : (
               <div className="divide-y divide-slate-100">
                 {equipments.slice(0, 5).map((item) => (
-                  <div key={item.id} className="px-5 py-3 flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-bold text-slate-800">{item.name}</p>
+                  <div key={item.id} className="px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-800 truncate">{item.name}</p>
                       <p className="text-[11px] text-slate-500">{formatCurrency(item.price)} / day</p>
                     </div>
                     <Badge variant={item.quantity > 0 ? 'success' : 'danger'} size="sm">

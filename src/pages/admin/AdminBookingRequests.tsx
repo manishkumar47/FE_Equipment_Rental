@@ -193,82 +193,154 @@ export const AdminBookingRequests: React.FC = () => {
               onAction={() => setSearchQuery('')}
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
-                  <tr>
-                    <th className="px-5 py-3.5">Booking #</th>
-                    <th className="px-5 py-3.5">Customer / User</th>
-                    <th className="px-5 py-3.5">Equipment Model</th>
-                    <th className="px-5 py-3.5 text-center">Qty</th>
-                    <th className="px-5 py-3.5">Requested Window</th>
-                    <th className="px-5 py-3.5">Est. Total</th>
-                    <th className="px-5 py-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {requests.map((booking) => {
-                    const days = calculateRentalDays(booking.rentFrom, booking.rentTo);
-                    const price = booking.equipment?.price || 0;
-                    const total = price > 0 ? days * price * booking.quantity : 0;
+            <>
+              {/* Desktop/tablet table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
+                    <tr>
+                      <th className="px-5 py-3.5">Booking #</th>
+                      <th className="px-5 py-3.5">Customer / User</th>
+                      <th className="px-5 py-3.5">Equipment Model</th>
+                      <th className="px-5 py-3.5 text-center">Qty</th>
+                      <th className="px-5 py-3.5">Requested Window</th>
+                      <th className="px-5 py-3.5">Est. Total</th>
+                      <th className="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {requests.map((booking) => {
+                      const days = calculateRentalDays(booking.rentFrom, booking.rentTo);
+                      const price = booking.equipment?.price || 0;
+                      const total = price > 0 ? days * price * booking.quantity : 0;
 
-                    return (
-                      <tr key={booking.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="px-5 py-3.5 font-mono font-bold text-slate-700">
+                      return (
+                        <tr key={booking.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="px-5 py-3.5 font-mono font-bold text-slate-700">
+                            #{booking.id}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <p className="font-semibold text-slate-900">
+                              {booking.user?.name || `User #${booking.userId}`}
+                            </p>
+                            <p className="text-[11px] text-slate-500">{booking.user?.email || '—'}</p>
+                          </td>
+                          <td className="px-5 py-3.5 font-medium text-slate-800">
+                            {booking.equipment?.name || `Equipment #${booking.equipmentId}`}
+                          </td>
+                          <td className="px-5 py-3.5 text-center font-semibold text-slate-800">
+                            {booking.quantity}
+                          </td>
+                          <td className="px-5 py-3.5 whitespace-nowrap">
+                            <p className="text-slate-700 font-medium">
+                              {formatDate(booking.rentFrom)} &rarr; {formatDate(booking.rentTo)}
+                            </p>
+                            <p className="text-[11px] text-slate-400 font-normal">{days} day(s)</p>
+                          </td>
+                          <td className="px-5 py-3.5 font-bold text-[#1E3A5F]">
+                            {total > 0 ? formatCurrency(total) : '—'}
+                          </td>
+                          <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleApprove(booking)}
+                                isLoading={approvingId === booking.id}
+                                disabled={approvingId !== null}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                                leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenRejectModal(booking)}
+                                disabled={approvingId !== null}
+                                className="text-rose-600 hover:bg-rose-50 border-slate-200"
+                                leftIcon={<XCircle className="w-3.5 h-3.5" />}
+                              >
+                                Reject
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile card list */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {requests.map((booking) => {
+                  const days = calculateRentalDays(booking.rentFrom, booking.rentTo);
+                  const price = booking.equipment?.price || 0;
+                  const total = price > 0 ? days * price * booking.quantity : 0;
+
+                  return (
+                    <div key={booking.id} className="p-4 space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono font-bold text-slate-700 text-xs">
                           #{booking.id}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <p className="font-semibold text-slate-900">
-                            {booking.user?.name || `User #${booking.userId}`}
-                          </p>
-                          <p className="text-[11px] text-slate-500">{booking.user?.email || '—'}</p>
-                        </td>
-                        <td className="px-5 py-3.5 font-medium text-slate-800">
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-slate-900">
+                          {booking.user?.name || `User #${booking.userId}`}
+                        </p>
+                        <p className="text-[11px] text-slate-500">{booking.user?.email || '—'}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-y-1.5 text-[11px]">
+                        <span className="text-slate-500">Equipment</span>
+                        <span className="text-right font-medium text-slate-800">
                           {booking.equipment?.name || `Equipment #${booking.equipmentId}`}
-                        </td>
-                        <td className="px-5 py-3.5 text-center font-semibold text-slate-800">
+                        </span>
+
+                        <span className="text-slate-500">Qty</span>
+                        <span className="text-right font-semibold text-slate-800">
                           {booking.quantity}
-                        </td>
-                        <td className="px-5 py-3.5 whitespace-nowrap">
-                          <p className="text-slate-700 font-medium">
-                            {formatDate(booking.rentFrom)} &rarr; {formatDate(booking.rentTo)}
-                          </p>
-                          <p className="text-[11px] text-slate-400 font-normal">{days} day(s)</p>
-                        </td>
-                        <td className="px-5 py-3.5 font-bold text-[#1E3A5F]">
+                        </span>
+
+                        <span className="text-slate-500">Requested Window</span>
+                        <span className="text-right text-slate-700">
+                          {formatDate(booking.rentFrom)} &rarr; {formatDate(booking.rentTo)} ({days}d)
+                        </span>
+
+                        <span className="text-slate-500">Est. Total</span>
+                        <span className="text-right font-bold text-[#1E3A5F]">
                           {total > 0 ? formatCurrency(total) : '—'}
-                        </td>
-                        <td className="px-5 py-3.5 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => handleApprove(booking)}
-                              isLoading={approvingId === booking.id}
-                              disabled={approvingId !== null}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                              leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleOpenRejectModal(booking)}
-                              disabled={approvingId !== null}
-                              className="text-rose-600 hover:bg-rose-50 border-slate-200"
-                              leftIcon={<XCircle className="w-3.5 h-3.5" />}
-                            >
-                              Reject
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleApprove(booking)}
+                          isLoading={approvingId === booking.id}
+                          disabled={approvingId !== null}
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                          leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenRejectModal(booking)}
+                          disabled={approvingId !== null}
+                          className="flex-1 text-rose-600 hover:bg-rose-50 border-slate-200"
+                          leftIcon={<XCircle className="w-3.5 h-3.5" />}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
 
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={isLoading} />

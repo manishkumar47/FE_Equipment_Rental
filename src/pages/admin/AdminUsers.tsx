@@ -243,85 +243,155 @@ export const AdminUsers: React.FC = () => {
               onAction={() => setSearchQuery('')}
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
-                  <tr>
-                    <th className="px-5 py-3.5">User ID</th>
-                    <th className="px-5 py-3.5">Full Name</th>
-                    <th className="px-5 py-3.5">Email Address</th>
-                    <th className="px-5 py-3.5">Access Role</th>
-                    <th className="px-5 py-3.5">Joined Date</th>
-                    <th className="px-5 py-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredUsers.map((targetUser) => {
-                    const isSelf = targetUser.id === currentAuthUser?.id;
-                    const isAdminUser = targetUser.role === 'ADMIN';
+            <>
+              {/* Desktop/tablet table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
+                    <tr>
+                      <th className="px-5 py-3.5">User ID</th>
+                      <th className="px-5 py-3.5">Full Name</th>
+                      <th className="px-5 py-3.5">Email Address</th>
+                      <th className="px-5 py-3.5">Access Role</th>
+                      <th className="px-5 py-3.5">Joined Date</th>
+                      <th className="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredUsers.map((targetUser) => {
+                      const isSelf = targetUser.id === currentAuthUser?.id;
+                      const isAdminUser = targetUser.role === 'ADMIN';
 
-                    return (
-                      <tr key={targetUser.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="px-5 py-3.5 font-mono font-bold text-slate-500">
-                          #{targetUser.id}
-                        </td>
-                        <td className="px-5 py-3.5 font-bold text-slate-900 flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F] flex items-center justify-center text-[11px] font-bold">
-                            {targetUser.name.charAt(0).toUpperCase()}
+                      return (
+                        <tr key={targetUser.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="px-5 py-3.5 font-mono font-bold text-slate-500">
+                            #{targetUser.id}
+                          </td>
+                          <td className="px-5 py-3.5 font-bold text-slate-900 flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F] flex items-center justify-center text-[11px] font-bold">
+                              {targetUser.name.charAt(0).toUpperCase()}
+                            </div>
+                            <span>{targetUser.name}</span>
+                            {isSelf && (
+                              <span className="text-[10px] bg-blue-50 text-[#1E3A5F] px-1.5 py-0.2 rounded font-semibold border border-blue-200">
+                                You
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-5 py-3.5 text-slate-600 font-mono">
+                            {targetUser.email}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <button
+                              onClick={() => handleToggleRole(targetUser)}
+                              disabled={updatingRoleId === targetUser.id || isSelf}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all cursor-pointer ${
+                                isAdminUser
+                                  ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
+                                  : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                              } disabled:opacity-75 disabled:cursor-not-allowed`}
+                              title={isSelf ? 'Cannot modify own role' : 'Click to toggle role'}
+                            >
+                              {isAdminUser ? (
+                                <ShieldCheck className="w-3 h-3 text-purple-600" />
+                              ) : (
+                                <UserCheck className="w-3 h-3 text-slate-500" />
+                              )}
+                              <span>{targetUser.role}</span>
+                              {updatingRoleId === targetUser.id && (
+                                <span className="animate-spin text-[10px]">&bull;</span>
+                              )}
+                            </button>
+                          </td>
+                          <td className="px-5 py-3.5 text-slate-500">
+                            {formatDate(targetUser.createdAt)}
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={isSelf}
+                              onClick={() => setDeletingUser(targetUser)}
+                              className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 disabled:opacity-30"
+                              aria-label="Delete User"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile card list */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {filteredUsers.map((targetUser) => {
+                  const isSelf = targetUser.id === currentAuthUser?.id;
+                  const isAdminUser = targetUser.role === 'ADMIN';
+
+                  return (
+                    <div key={targetUser.id} className="p-4 space-y-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F] flex items-center justify-center text-xs font-bold shrink-0">
+                          {targetUser.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-slate-900 text-xs">{targetUser.name}</span>
+                            {isSelf && (
+                              <span className="text-[10px] bg-blue-50 text-[#1E3A5F] px-1.5 py-0.2 rounded font-semibold border border-blue-200">
+                                You
+                              </span>
+                            )}
                           </div>
-                          <span>{targetUser.name}</span>
-                          {isSelf && (
-                            <span className="text-[10px] bg-blue-50 text-[#1E3A5F] px-1.5 py-0.2 rounded font-semibold border border-blue-200">
-                              You
-                            </span>
+                          <p className="text-[11px] text-slate-500 font-mono truncate">
+                            {targetUser.email}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={isSelf}
+                          onClick={() => setDeletingUser(targetUser)}
+                          className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 disabled:opacity-30 shrink-0"
+                          aria-label="Delete User"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-slate-500">
+                          #{targetUser.id} &bull; Joined {formatDate(targetUser.createdAt)}
+                        </span>
+                        <button
+                          onClick={() => handleToggleRole(targetUser)}
+                          disabled={updatingRoleId === targetUser.id || isSelf}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all cursor-pointer ${
+                            isAdminUser
+                              ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
+                              : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                          } disabled:opacity-75 disabled:cursor-not-allowed`}
+                          title={isSelf ? 'Cannot modify own role' : 'Click to toggle role'}
+                        >
+                          {isAdminUser ? (
+                            <ShieldCheck className="w-3 h-3 text-purple-600" />
+                          ) : (
+                            <UserCheck className="w-3 h-3 text-slate-500" />
                           )}
-                        </td>
-                        <td className="px-5 py-3.5 text-slate-600 font-mono">
-                          {targetUser.email}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <button
-                            onClick={() => handleToggleRole(targetUser)}
-                            disabled={updatingRoleId === targetUser.id || isSelf}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all cursor-pointer ${
-                              isAdminUser
-                                ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
-                                : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
-                            } disabled:opacity-75 disabled:cursor-not-allowed`}
-                            title={isSelf ? 'Cannot modify own role' : 'Click to toggle role'}
-                          >
-                            {isAdminUser ? (
-                              <ShieldCheck className="w-3 h-3 text-purple-600" />
-                            ) : (
-                              <UserCheck className="w-3 h-3 text-slate-500" />
-                            )}
-                            <span>{targetUser.role}</span>
-                            {updatingRoleId === targetUser.id && (
-                              <span className="animate-spin text-[10px]">&bull;</span>
-                            )}
-                          </button>
-                        </td>
-                        <td className="px-5 py-3.5 text-slate-500">
-                          {formatDate(targetUser.createdAt)}
-                        </td>
-                        <td className="px-5 py-3.5 text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            disabled={isSelf}
-                            onClick={() => setDeletingUser(targetUser)}
-                            className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 disabled:opacity-30"
-                            aria-label="Delete User"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          <span>{targetUser.role}</span>
+                          {updatingRoleId === targetUser.id && (
+                            <span className="animate-spin text-[10px]">&bull;</span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

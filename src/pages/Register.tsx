@@ -318,7 +318,7 @@ export const Register: React.FC = () => {
   // ----------------------------------------------------
   if (step === 'otp') {
     return (
-      <div className="bg-white p-8 rounded-xl border border-slate-200/90 shadow-sm max-w-md mx-auto">
+      <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200/90 shadow-sm max-w-md mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="w-12 h-12 rounded-full bg-blue-50 text-[#1E3A5F] flex items-center justify-center mx-auto mb-3 border border-blue-100">
@@ -498,7 +498,7 @@ export const Register: React.FC = () => {
   // RENDER: STEP 1 - Sign Up Form
   // ----------------------------------------------------
   return (
-    <div className="bg-white p-8 rounded-xl border border-slate-200/90 shadow-sm max-w-md mx-auto">
+    <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200/90 shadow-sm max-w-md mx-auto">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-slate-900 tracking-tight">
           Create an Account

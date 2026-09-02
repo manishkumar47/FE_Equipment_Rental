@@ -32,7 +32,7 @@ export const CardHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
 }) => {
   return (
     <div
-      className={cn('px-5 py-4 border-b border-slate-100 flex items-center justify-between', className)}
+      className={cn('px-4 sm:px-5 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2', className)}
       {...props}
     >
       {children}
@@ -73,7 +73,7 @@ export const CardContent: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => {
   return (
-    <div className={cn('p-5', className)} {...props}>
+    <div className={cn('p-4 sm:p-5', className)} {...props}>
       {children}
     </div>
   );
@@ -87,7 +87,7 @@ export const CardFooter: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   return (
     <div
       className={cn(
-        'px-5 py-3.5 bg-slate-50/60 rounded-b-lg border-t border-slate-100 flex items-center justify-between',
+        'px-4 sm:px-5 py-3.5 bg-slate-50/60 rounded-b-lg border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2',
         className
       )}
       {...props}

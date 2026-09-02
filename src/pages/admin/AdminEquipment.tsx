@@ -345,7 +345,7 @@ export const AdminEquipment: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -435,54 +435,157 @@ export const AdminEquipment: React.FC = () => {
               }
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
-                  <tr>
-                    <th className="px-5 py-3.5">ID</th>
-                    <th className="px-5 py-3.5">Model / Name</th>
-                    <th className="px-5 py-3.5">Description</th>
-                    <th className="px-5 py-3.5 text-center">Available Stock</th>
-                    <th className="px-5 py-3.5 text-center">Tracked Units</th>
-                    <th className="px-5 py-3.5">Daily Rate</th>
-                    <th className="px-5 py-3.5">Status</th>
-                    <th className="px-5 py-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredEquipments.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-slate-50/80 transition-colors"
-                    >
-                      <td className="px-5 py-3.5 font-mono font-bold text-slate-400">
-                        #{item.id}
-                      </td>
-                      <td className="px-5 py-3.5 font-bold text-slate-900 flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded bg-slate-100 border border-slate-200 text-[#1E3A5F] flex items-center justify-center shrink-0 overflow-hidden">
-                          {item.imageUrl ? (
-                            <img
-                              src={item.imageUrl}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display =
-                                  "none";
-                              }}
-                            />
+            <>
+              {/* Desktop/tablet table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
+                    <tr>
+                      <th className="px-5 py-3.5">ID</th>
+                      <th className="px-5 py-3.5">Model / Name</th>
+                      <th className="px-5 py-3.5">Description</th>
+                      <th className="px-5 py-3.5 text-center">Available Stock</th>
+                      <th className="px-5 py-3.5 text-center">Tracked Units</th>
+                      <th className="px-5 py-3.5">Daily Rate</th>
+                      <th className="px-5 py-3.5">Status</th>
+                      <th className="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredEquipments.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-slate-50/80 transition-colors"
+                      >
+                        <td className="px-5 py-3.5 font-mono font-bold text-slate-400">
+                          #{item.id}
+                        </td>
+                        <td className="px-5 py-3.5 font-bold text-slate-900 flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded bg-slate-100 border border-slate-200 text-[#1E3A5F] flex items-center justify-center shrink-0 overflow-hidden">
+                            {item.imageUrl ? (
+                              <img
+                                src={item.imageUrl}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display =
+                                    "none";
+                                }}
+                              />
+                            ) : (
+                              getEquipmentIcon(item.name)
+                            )}
+                          </div>
+                          <span>{item.name}</span>
+                        </td>
+                        <td className="px-5 py-3.5 text-slate-500 max-w-xs truncate">
+                          {item.description || "—"}
+                        </td>
+                        <td className="px-5 py-3.5 text-center font-semibold text-slate-800">
+                          {item.quantity}
+                        </td>
+                        <td className="px-5 py-3.5 text-center">
+                          {item.totalItemCount ? (
+                            <Badge
+                              variant={item.availableItemCount ? "success" : "neutral"}
+                              size="sm"
+                            >
+                              {item.availableItemCount ?? 0}/{item.totalItemCount} tracked
+                            </Badge>
                           ) : (
-                            getEquipmentIcon(item.name)
+                            <span className="text-slate-400">Not tracked</span>
                           )}
+                        </td>
+                        <td className="px-5 py-3.5 font-bold text-slate-900">
+                          {formatCurrency(item.price)}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <Badge
+                            variant={item.quantity > 0 ? "success" : "danger"}
+                            size="sm"
+                          >
+                            {item.quantity > 0 ? "In Stock" : "Out of Stock"}
+                          </Badge>
+                        </td>
+                        <td className="px-5 py-3.5 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setManagingUnitsItem(item)}
+                              className="p-1.5 text-slate-600 hover:text-[#1E3A5F] hover:bg-[#1E3A5F]/5"
+                              aria-label="Manage physical units"
+                            >
+                              <Barcode className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenEditModal(item)}
+                              className="p-1.5 text-slate-600 hover:text-slate-900"
+                              aria-label="Edit"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDeletingItem(item)}
+                              className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                              aria-label="Delete"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile card list */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {filteredEquipments.map((item) => (
+                  <div key={item.id} className="p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded bg-slate-100 border border-slate-200 text-[#1E3A5F] flex items-center justify-center shrink-0 overflow-hidden">
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          getEquipmentIcon(item.name)
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono font-bold text-slate-400 text-[11px]">
+                            #{item.id}
+                          </span>
+                          <span className="font-bold text-slate-900 text-xs">{item.name}</span>
                         </div>
-                        <span>{item.name}</span>
-                      </td>
-                      <td className="px-5 py-3.5 text-slate-500 max-w-xs truncate">
-                        {item.description || "—"}
-                      </td>
-                      <td className="px-5 py-3.5 text-center font-semibold text-slate-800">
+                        {item.description && (
+                          <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-y-1.5 text-[11px]">
+                      <span className="text-slate-500">Available Stock</span>
+                      <span className="text-right font-semibold text-slate-800">
                         {item.quantity}
-                      </td>
-                      <td className="px-5 py-3.5 text-center">
+                      </span>
+
+                      <span className="text-slate-500">Tracked Units</span>
+                      <span className="text-right">
                         {item.totalItemCount ? (
                           <Badge
                             variant={item.availableItemCount ? "success" : "neutral"}
@@ -493,54 +596,57 @@ export const AdminEquipment: React.FC = () => {
                         ) : (
                           <span className="text-slate-400">Not tracked</span>
                         )}
-                      </td>
-                      <td className="px-5 py-3.5 font-bold text-slate-900">
+                      </span>
+
+                      <span className="text-slate-500">Daily Rate</span>
+                      <span className="text-right font-bold text-slate-900">
                         {formatCurrency(item.price)}
-                      </td>
-                      <td className="px-5 py-3.5">
+                      </span>
+
+                      <span className="text-slate-500">Status</span>
+                      <span className="text-right">
                         <Badge
                           variant={item.quantity > 0 ? "success" : "danger"}
                           size="sm"
                         >
                           {item.quantity > 0 ? "In Stock" : "Out of Stock"}
                         </Badge>
-                      </td>
-                      <td className="px-5 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setManagingUnitsItem(item)}
-                            className="p-1.5 text-slate-600 hover:text-[#1E3A5F] hover:bg-[#1E3A5F]/5"
-                            aria-label="Manage physical units"
-                          >
-                            <Barcode className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenEditModal(item)}
-                            className="p-1.5 text-slate-600 hover:text-slate-900"
-                            aria-label="Edit"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDeletingItem(item)}
-                            className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                            aria-label="Delete"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-slate-100">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setManagingUnitsItem(item)}
+                        className="p-1.5 text-slate-600 hover:text-[#1E3A5F] hover:bg-[#1E3A5F]/5"
+                        aria-label="Manage physical units"
+                      >
+                        <Barcode className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOpenEditModal(item)}
+                        className="p-1.5 text-slate-600 hover:text-slate-900"
+                        aria-label="Edit"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeletingItem(item)}
+                        className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                        aria-label="Delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={isLoading} />
         </CardContent>
@@ -633,7 +739,7 @@ export const AdminEquipment: React.FC = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 label="Available Quantity"
                 type="number"

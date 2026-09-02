@@ -6,7 +6,7 @@ import { Boxes, ArrowLeft } from 'lucide-react';
 
 export const NotFound: React.FC = () => {
   return (
-    <div className="py-20 text-center max-w-md mx-auto space-y-5">
+    <div className="py-12 sm:py-20 px-4 text-center max-w-md mx-auto space-y-5">
       <div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 text-[#1E3A5F] flex items-center justify-center mx-auto shadow-2xs">
         <Boxes className="w-8 h-8" />
       </div>

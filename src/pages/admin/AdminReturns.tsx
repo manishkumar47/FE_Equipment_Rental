@@ -311,102 +311,184 @@ export const AdminReturns: React.FC = () => {
               onAction={() => setSearchQuery('')}
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
-                  <tr>
-                    <th className="px-5 py-3.5">Booking #</th>
-                    <th className="px-5 py-3.5">Customer / User</th>
-                    <th className="px-5 py-3.5">Equipment Model</th>
-                    <th className="px-5 py-3.5 text-center">Qty</th>
-                    <th className="px-5 py-3.5">Rental Window</th>
-                    <th className="px-5 py-3.5">Requested At</th>
-                    <th className="px-5 py-3.5">Days Late / Status</th>
-                    <th className="px-5 py-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {returnRequests.map((booking) => {
-                    const now = new Date();
-                    const rentToDate = new Date(booking.rentTo);
-                    const isOverdue = now > rentToDate;
-                    const diffMs = now.getTime() - rentToDate.getTime();
-                    const daysLate = isOverdue ? Math.floor(diffMs / (1000 * 60 * 60 * 24)) : 0;
-                    const days = calculateRentalDays(booking.rentFrom, booking.rentTo);
+            <>
+              {/* Desktop/tablet table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
+                    <tr>
+                      <th className="px-5 py-3.5">Booking #</th>
+                      <th className="px-5 py-3.5">Customer / User</th>
+                      <th className="px-5 py-3.5">Equipment Model</th>
+                      <th className="px-5 py-3.5 text-center">Qty</th>
+                      <th className="px-5 py-3.5">Rental Window</th>
+                      <th className="px-5 py-3.5">Requested At</th>
+                      <th className="px-5 py-3.5">Days Late / Status</th>
+                      <th className="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {returnRequests.map((booking) => {
+                      const now = new Date();
+                      const rentToDate = new Date(booking.rentTo);
+                      const isOverdue = now > rentToDate;
+                      const diffMs = now.getTime() - rentToDate.getTime();
+                      const daysLate = isOverdue ? Math.floor(diffMs / (1000 * 60 * 60 * 24)) : 0;
+                      const days = calculateRentalDays(booking.rentFrom, booking.rentTo);
 
-                    return (
-                      <tr key={booking.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="px-5 py-3.5 font-mono font-bold text-slate-700">
-                          #{booking.id}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <p className="font-semibold text-slate-900">
-                            {booking.user?.name || `User #${booking.userId}`}
-                          </p>
-                          <p className="text-[11px] text-slate-500">{booking.user?.email || '—'}</p>
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <p className="font-medium text-slate-800">
-                            {booking.equipment?.name || `Equipment #${booking.equipmentId}`}
-                          </p>
-                          {booking.equipment?.price && (
-                            <p className="text-[11px] text-slate-400">
-                              Unit Price: {formatCurrency(booking.equipment.price)}
+                      return (
+                        <tr key={booking.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="px-5 py-3.5 font-mono font-bold text-slate-700">
+                            #{booking.id}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <p className="font-semibold text-slate-900">
+                              {booking.user?.name || `User #${booking.userId}`}
                             </p>
-                          )}
-                        </td>
-                        <td className="px-5 py-3.5 text-center font-semibold text-slate-800">
+                            <p className="text-[11px] text-slate-500">{booking.user?.email || '—'}</p>
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <p className="font-medium text-slate-800">
+                              {booking.equipment?.name || `Equipment #${booking.equipmentId}`}
+                            </p>
+                            {booking.equipment?.price && (
+                              <p className="text-[11px] text-slate-400">
+                                Unit Price: {formatCurrency(booking.equipment.price)}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-5 py-3.5 text-center font-semibold text-slate-800">
+                            {booking.quantity}
+                          </td>
+                          <td className="px-5 py-3.5 whitespace-nowrap">
+                            <p className="text-slate-700 font-medium">
+                              {formatDate(booking.rentFrom)} &rarr; {formatDate(booking.rentTo)}
+                            </p>
+                            <p className="text-[11px] text-slate-400 font-normal">{days} day(s)</p>
+                          </td>
+                          <td className="px-5 py-3.5 text-slate-600 whitespace-nowrap">
+                            {formatDateTime(booking.returnRequestedAt || undefined)}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            {daysLate > 0 ? (
+                              <Badge variant="danger" size="sm" className="bg-rose-50 text-rose-700 border-rose-200">
+                                <AlertCircle className="w-3 h-3 mr-1" />
+                                {daysLate} {daysLate === 1 ? 'day' : 'days'} late
+                              </Badge>
+                            ) : (
+                              <Badge variant="success" size="sm">
+                                On Schedule
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleOpenConfirmModal(booking)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                                leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                              >
+                                Verify & Confirm
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenRejectModal(booking)}
+                                className="text-rose-600 hover:bg-rose-50 border-slate-200"
+                                leftIcon={<XCircle className="w-3.5 h-3.5" />}
+                              >
+                                Reject
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile card list */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {returnRequests.map((booking) => {
+                  const now = new Date();
+                  const rentToDate = new Date(booking.rentTo);
+                  const isOverdue = now > rentToDate;
+                  const diffMs = now.getTime() - rentToDate.getTime();
+                  const daysLate = isOverdue ? Math.floor(diffMs / (1000 * 60 * 60 * 24)) : 0;
+                  const days = calculateRentalDays(booking.rentFrom, booking.rentTo);
+
+                  return (
+                    <div key={booking.id} className="p-4 space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono font-bold text-slate-700 text-xs">
+                          #{booking.id}
+                        </span>
+                        {daysLate > 0 ? (
+                          <Badge variant="danger" size="sm" className="bg-rose-50 text-rose-700 border-rose-200">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            {daysLate} {daysLate === 1 ? 'day' : 'days'} late
+                          </Badge>
+                        ) : (
+                          <Badge variant="success" size="sm">
+                            On Schedule
+                          </Badge>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-slate-900">
+                          {booking.user?.name || `User #${booking.userId}`}
+                        </p>
+                        <p className="text-[11px] text-slate-500">{booking.user?.email || '—'}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-y-1.5 text-[11px]">
+                        <span className="text-slate-500">Equipment</span>
+                        <span className="text-right font-medium text-slate-800">
+                          {booking.equipment?.name || `Equipment #${booking.equipmentId}`}
+                        </span>
+
+                        <span className="text-slate-500">Qty</span>
+                        <span className="text-right font-semibold text-slate-800">
                           {booking.quantity}
-                        </td>
-                        <td className="px-5 py-3.5 whitespace-nowrap">
-                          <p className="text-slate-700 font-medium">
-                            {formatDate(booking.rentFrom)} &rarr; {formatDate(booking.rentTo)}
-                          </p>
-                          <p className="text-[11px] text-slate-400 font-normal">{days} day(s)</p>
-                        </td>
-                        <td className="px-5 py-3.5 text-slate-600 whitespace-nowrap">
+                        </span>
+
+                        <span className="text-slate-500">Rental Window</span>
+                        <span className="text-right text-slate-700">
+                          {formatDate(booking.rentFrom)} &rarr; {formatDate(booking.rentTo)} ({days}d)
+                        </span>
+
+                        <span className="text-slate-500">Requested At</span>
+                        <span className="text-right text-slate-600">
                           {formatDateTime(booking.returnRequestedAt || undefined)}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          {daysLate > 0 ? (
-                            <Badge variant="danger" size="sm" className="bg-rose-50 text-rose-700 border-rose-200">
-                              <AlertCircle className="w-3 h-3 mr-1" />
-                              {daysLate} {daysLate === 1 ? 'day' : 'days'} late
-                            </Badge>
-                          ) : (
-                            <Badge variant="success" size="sm">
-                              On Schedule
-                            </Badge>
-                          )}
-                        </td>
-                        <td className="px-5 py-3.5 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => handleOpenConfirmModal(booking)}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                              leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
-                            >
-                              Verify & Confirm
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleOpenRejectModal(booking)}
-                              className="text-rose-600 hover:bg-rose-50 border-slate-200"
-                              leftIcon={<XCircle className="w-3.5 h-3.5" />}
-                            >
-                              Reject
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleOpenConfirmModal(booking)}
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                          leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                        >
+                          Verify
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenRejectModal(booking)}
+                          className="flex-1 text-rose-600 hover:bg-rose-50 border-slate-200"
+                          leftIcon={<XCircle className="w-3.5 h-3.5" />}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
 
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={isLoading} />
@@ -456,7 +538,7 @@ export const AdminReturns: React.FC = () => {
               <label className="block text-xs font-bold text-slate-800">
                 Equipment Condition <span className="text-rose-500">*</span>
               </label>
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 {[
                   { id: 'good', label: 'Good / Normal', desc: 'No damage, restock full quantity' },
                   { id: 'damaged', label: 'Damaged', desc: 'Restock item + apply damage fee' },
@@ -499,7 +581,7 @@ export const AdminReturns: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => setDamagePreset('25')}
@@ -592,7 +674,7 @@ export const AdminReturns: React.FC = () => {
                 </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-xs pt-1 border-t border-slate-800">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-1 border-t border-slate-800">
                 <div>
                   <p className="text-[11px] text-slate-400">Late Fee</p>
                   <p className="font-semibold text-slate-200">
