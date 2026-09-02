@@ -56,19 +56,21 @@ export const Navbar: React.FC = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1">
-              <Link
-                to={URL.EQUIPMENT}
-                className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                  isActive(URL.EQUIPMENT)
-                    ? 'bg-slate-100 text-slate-900 font-semibold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5 text-slate-500" />
-                Equipment
-              </Link>
+              {!isAdmin && (
+                <Link
+                  to={URL.EQUIPMENT}
+                  className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+                    isActive(URL.EQUIPMENT)
+                      ? 'bg-slate-100 text-slate-900 font-semibold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5 text-slate-500" />
+                  Equipment
+                </Link>
+              )}
 
-              {isAuthenticated && (
+              {isAuthenticated && !isAdmin && (
                 <Link
                   to={URL.RENTALS}
                   className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
@@ -82,7 +84,7 @@ export const Navbar: React.FC = () => {
                 </Link>
               )}
 
-              {isAuthenticated && (
+              {isAuthenticated && !isAdmin && (
                 <Link
                   to={URL.FINES}
                   className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
@@ -224,22 +226,26 @@ export const Navbar: React.FC = () => {
                           <User className="w-3.5 h-3.5 text-slate-500" />
                           My Profile
                         </Link>
-                        <Link
-                          to={URL.RENTALS}
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-                        >
-                          <CalendarCheck className="w-3.5 h-3.5 text-slate-500" />
-                          Rental History
-                        </Link>
-                        <Link
-                          to={URL.FINES}
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-                        >
-                          <Receipt className="w-3.5 h-3.5 text-slate-500" />
-                          My Fines
-                        </Link>
+                        {!isAdmin && (
+                          <Link
+                            to={URL.RENTALS}
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                          >
+                            <CalendarCheck className="w-3.5 h-3.5 text-slate-500" />
+                            Rental History
+                          </Link>
+                        )}
+                        {!isAdmin && (
+                          <Link
+                            to={URL.FINES}
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                          >
+                            <Receipt className="w-3.5 h-3.5 text-slate-500" />
+                            My Fines
+                          </Link>
+                        )}
                         {isAdmin && (
                           <Link
                             to={URL.ADMIN_DASHBOARD}
@@ -300,15 +306,17 @@ export const Navbar: React.FC = () => {
       {/* Mobile Menu dropdown */}
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2 max-h-[calc(100vh-4rem)] overflow-y-auto">
-          <Link
-            to={URL.EQUIPMENT}
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
-            <Layers className="w-4 h-4 text-slate-500" />
-            Equipment Catalog
-          </Link>
-          {isAuthenticated && (
+          {!isAdmin && (
+            <Link
+              to={URL.EQUIPMENT}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <Layers className="w-4 h-4 text-slate-500" />
+              Equipment Catalog
+            </Link>
+          )}
+          {isAuthenticated && !isAdmin && (
             <Link
               to={URL.RENTALS}
               onClick={() => setIsMobileMenuOpen(false)}
@@ -318,7 +326,7 @@ export const Navbar: React.FC = () => {
               My Rentals
             </Link>
           )}
-          {isAuthenticated && (
+          {isAuthenticated && !isAdmin && (
             <Link
               to={URL.FINES}
               onClick={() => setIsMobileMenuOpen(false)}
