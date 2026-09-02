@@ -10,12 +10,14 @@ import type {
 
 export const returnApi = {
   /**
-   * User requests equipment return
+   * User requests equipment return. Omit quantity to return everything
+   * still outstanding; pass it to return only part of a tracked booking.
    * POST /rentals/:bookingId/return-request
    */
-  requestReturn: async (bookingId: number): Promise<RentalBookingItem> => {
+  requestReturn: async (bookingId: number, quantity?: number): Promise<RentalBookingItem> => {
     const res = await apiClient.post<ApiResponse<RentalBookingItem>>(
-      `/rentals/${bookingId}/return-request`
+      `/rentals/${bookingId}/return-request`,
+      quantity !== undefined ? { quantity } : undefined
     );
     return res.data.data;
   },

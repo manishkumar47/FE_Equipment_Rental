@@ -93,6 +93,12 @@ export type EquipmentSortBy = 'name_asc' | 'price_asc' | 'price_desc' | 'stock_d
 
 export type BookingStatus = 'requested' | 'rejected' | 'active' | 'return_requested' | 'returned';
 
+export interface PendingReturnItem {
+  id: number;
+  equipmentItemId: number;
+  serialNumber: string;
+}
+
 export interface RentalBookingItem {
   id: number;
   rentFrom: string;
@@ -110,6 +116,14 @@ export interface RentalBookingItem {
   isReminderSent?: boolean;
   isDeleted?: boolean;
   deletedAt?: string | null;
+  // Present on "my bookings" (how many units are individually tracked /
+  // still outstanding — 0 tracked means legacy all-or-nothing return).
+  trackedItemsCount?: number;
+  outstandingItemsCount?: number;
+  // Present on admin's pending-return-requests list — the exact serialized
+  // units in the current pending group. Empty/absent = legacy booking,
+  // the whole quantity is what's pending.
+  pendingItems?: PendingReturnItem[];
   user?: {
     id: number;
     name: string;
@@ -185,11 +199,25 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-export interface ConfirmReturnPayload {
+export interface ReturnItemDecision {
+  equipmentItemId: number;
   condition: 'good' | 'damaged' | 'lost';
-  conditionNotes?: string;
   damageFee?: number;
 }
+
+export type ConfirmReturnPayload =
+  | {
+      condition: 'good' | 'damaged' | 'lost';
+      conditionNotes?: string;
+      damageFee?: number;
+      items?: never;
+    }
+  | {
+      items: ReturnItemDecision[];
+      condition?: never;
+      conditionNotes?: never;
+      damageFee?: never;
+    };
 
 export interface FineBreakdown {
   id?: number;
@@ -207,6 +235,7 @@ export interface FineBreakdown {
 export interface ConfirmReturnResponse {
   booking: RentalBookingItem;
   fine: FineBreakdown | null;
+  items?: { equipmentItemId: number; condition: 'good' | 'damaged' | 'lost'; damageFee: number | null }[];
 }
 
 export interface RejectReturnPayload {

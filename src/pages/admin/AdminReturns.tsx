@@ -43,13 +43,35 @@ export const AdminReturns: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Confirm Return Modal State
+  // Confirm Return Modal State (legacy / untracked booking)
   const [confirmingBooking, setConfirmingBooking] = useState<RentalBookingItem | null>(null);
   const [condition, setCondition] = useState<'good' | 'damaged' | 'lost' | ''>('');
   const [damagePreset, setDamagePreset] = useState<'25' | '50' | 'custom'>('25');
   const [customDamageFee, setCustomDamageFee] = useState<string>('');
   const [conditionNotes, setConditionNotes] = useState('');
   const [isSubmittingConfirm, setIsSubmittingConfirm] = useState(false);
+
+  // Per-unit condition state, keyed by equipmentItemId (serialized bookings only)
+  type UnitDecision = { condition: 'good' | 'damaged' | 'lost' | ''; damagePreset: '25' | '50' | 'custom'; customDamageFee: string };
+  const [unitDecisions, setUnitDecisions] = useState<Record<number, UnitDecision>>({});
+
+  const isSerializedBooking = (booking: RentalBookingItem) => (booking.pendingItems?.length ?? 0) > 0;
+
+  const updateUnitDecision = (equipmentItemId: number, patch: Partial<UnitDecision>) => {
+    setUnitDecisions((prev) => ({
+      ...prev,
+      [equipmentItemId]: { ...prev[equipmentItemId]!, ...patch },
+    }));
+  };
+
+  const getUnitDamageFee = (booking: RentalBookingItem, decision: UnitDecision): number | undefined => {
+    if (decision.condition !== 'damaged' || !booking.equipment?.price) return undefined;
+    const price = booking.equipment.price;
+    if (decision.damagePreset === '25') return Math.round(price * 0.25);
+    if (decision.damagePreset === '50') return Math.round(price * 0.5);
+    const num = parseFloat(decision.customDamageFee);
+    return isNaN(num) || num <= 0 ? 0 : num;
+  };
 
   // Authoritative Fine Success Modal State
   const [completedReturnData, setCompletedReturnData] = useState<ConfirmReturnResponse | null>(null);
@@ -84,6 +106,11 @@ export const AdminReturns: React.FC = () => {
     setDamagePreset('25');
     setCustomDamageFee('');
     setConditionNotes('');
+    const initialDecisions: Record<number, UnitDecision> = {};
+    for (const item of booking.pendingItems ?? []) {
+      initialDecisions[item.equipmentItemId] = { condition: '', damagePreset: '25', customDamageFee: '' };
+    }
+    setUnitDecisions(initialDecisions);
   };
 
   // Close Confirm Modal
@@ -93,6 +120,7 @@ export const AdminReturns: React.FC = () => {
     setDamagePreset('25');
     setCustomDamageFee('');
     setConditionNotes('');
+    setUnitDecisions({});
   };
 
   // Calculate live damage fee number based on selection
@@ -108,22 +136,27 @@ export const AdminReturns: React.FC = () => {
     return undefined;
   };
 
-  // Calculate estimated fine components for live preview
-  const calculateEstimatedFine = () => {
-    if (!confirmingBooking) return { lateFee: 0, conditionFee: 0, totalEstimate: 0, daysLate: 0 };
-
+  // Late fee tiers: ₹100/day for 1-7, ₹200/day for 8-14, capped at day 14 (max ₹2,100)
+  const calculateDaysLateAndFee = (rentTo: string) => {
     const now = new Date();
-    const rentToDate = new Date(confirmingBooking.rentTo);
+    const rentToDate = new Date(rentTo);
     const diffMs = now.getTime() - rentToDate.getTime();
     const daysLate = diffMs > 0 ? Math.floor(diffMs / (1000 * 60 * 60 * 24)) : 0;
 
-    // Late fee tiers: ₹100/day for 1-7, ₹200/day for 8-14, capped at day 14 (max ₹2,100)
     let lateFee = 0;
     if (daysLate > 0) {
       const tier1 = Math.min(daysLate, 7) * 100;
       const tier2 = Math.max(0, Math.min(daysLate, 14) - 7) * 200;
       lateFee = tier1 + tier2;
     }
+    return { daysLate, lateFee };
+  };
+
+  // Calculate estimated fine components for live preview (legacy / untracked booking)
+  const calculateEstimatedFine = () => {
+    if (!confirmingBooking) return { lateFee: 0, conditionFee: 0, totalEstimate: 0, daysLate: 0 };
+
+    const { daysLate, lateFee } = calculateDaysLateAndFee(confirmingBooking.rentTo);
 
     let conditionFee = 0;
     const equipmentPrice = confirmingBooking.equipment?.price || 0;
@@ -141,7 +174,28 @@ export const AdminReturns: React.FC = () => {
     };
   };
 
-  // Submit Confirm Return
+  // Live combined fine estimate across all pending units (serialized booking)
+  const calculateEstimatedFineForUnits = () => {
+    if (!confirmingBooking) return { lateFee: 0, conditionFee: 0, totalEstimate: 0, daysLate: 0 };
+
+    const { daysLate, lateFee } = calculateDaysLateAndFee(confirmingBooking.rentTo);
+    const equipmentPrice = confirmingBooking.equipment?.price || 0;
+
+    let conditionFee = 0;
+    for (const item of confirmingBooking.pendingItems ?? []) {
+      const decision = unitDecisions[item.equipmentItemId];
+      if (!decision) continue;
+      if (decision.condition === 'damaged') {
+        conditionFee += getUnitDamageFee(confirmingBooking, decision) || 0;
+      } else if (decision.condition === 'lost') {
+        conditionFee += equipmentPrice;
+      }
+    }
+
+    return { lateFee, conditionFee, totalEstimate: lateFee + conditionFee, daysLate };
+  };
+
+  // Submit Confirm Return — legacy / untracked booking (single condition)
   const handleSubmitConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!confirmingBooking) return;
@@ -172,6 +226,57 @@ export const AdminReturns: React.FC = () => {
         conditionNotes: conditionNotes.trim() || undefined,
         damageFee: damageFeeToSend,
       });
+
+      handleCloseConfirmModal();
+      setCompletedReturnData(result);
+      fetchReturns();
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err);
+      if (msg.includes('already processed') || msg.includes('409')) {
+        showToast(t('RETURN_ALREADY_PROCESSED'), 'warning');
+        handleCloseConfirmModal();
+        fetchReturns();
+      } else {
+        showToast(msg, 'error');
+      }
+    } finally {
+      setIsSubmittingConfirm(false);
+    }
+  };
+
+  // Submit Confirm Return — serialized booking (per-unit condition)
+  const handleSubmitConfirmUnits = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!confirmingBooking) return;
+    const pendingItems = confirmingBooking.pendingItems ?? [];
+    const maxFee = (confirmingBooking.equipment?.price || 0) * 1.5;
+
+    const items: { equipmentItemId: number; condition: 'good' | 'damaged' | 'lost'; damageFee?: number }[] = [];
+    for (const item of pendingItems) {
+      const decision = unitDecisions[item.equipmentItemId];
+      if (!decision?.condition) {
+        showToast(t('RETURN_CONDITION_REQUIRED'), 'error');
+        return;
+      }
+      if (decision.condition === 'damaged') {
+        const fee = getUnitDamageFee(confirmingBooking, decision);
+        if (!fee || fee <= 0) {
+          showToast(t('DAMAGE_FEE_INVALID'), 'error');
+          return;
+        }
+        if (fee > maxFee) {
+          showToast(t('DAMAGE_FEE_EXCEEDS_LIMIT', { maxFee: formatCurrency(maxFee) }), 'error');
+          return;
+        }
+        items.push({ equipmentItemId: item.equipmentItemId, condition: 'damaged', damageFee: fee });
+      } else {
+        items.push({ equipmentItemId: item.equipmentItemId, condition: decision.condition });
+      }
+    }
+
+    setIsSubmittingConfirm(true);
+    try {
+      const result = await returnApi.confirmReturn(confirmingBooking.id, { items });
 
       handleCloseConfirmModal();
       setCompletedReturnData(result);
@@ -235,6 +340,7 @@ export const AdminReturns: React.FC = () => {
   };
 
   const estimatedFine = calculateEstimatedFine();
+  const estimatedFineForUnits = calculateEstimatedFineForUnits();
   const maxAllowableDamageFee = (confirmingBooking?.equipment?.price || 0) * 1.5;
 
   return (
@@ -358,7 +464,12 @@ export const AdminReturns: React.FC = () => {
                             )}
                           </td>
                           <td className="px-5 py-3.5 text-center font-semibold text-slate-800">
-                            {booking.quantity}
+                            {isSerializedBooking(booking) ? booking.pendingItems!.length : booking.quantity}
+                            {isSerializedBooking(booking) && booking.pendingItems!.length < booking.quantity && (
+                              <span className="block text-[10px] font-normal text-slate-400">
+                                of {booking.quantity} total
+                              </span>
+                            )}
                           </td>
                           <td className="px-5 py-3.5 whitespace-nowrap">
                             <p className="text-slate-700 font-medium">
@@ -451,7 +562,10 @@ export const AdminReturns: React.FC = () => {
 
                         <span className="text-slate-500">Qty</span>
                         <span className="text-right font-semibold text-slate-800">
-                          {booking.quantity}
+                          {isSerializedBooking(booking) ? booking.pendingItems!.length : booking.quantity}
+                          {isSerializedBooking(booking) && booking.pendingItems!.length < booking.quantity && (
+                            <span className="font-normal text-slate-400"> of {booking.quantity}</span>
+                          )}
                         </span>
 
                         <span className="text-slate-500">Rental Window</span>
@@ -495,8 +609,8 @@ export const AdminReturns: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Confirm Return Modal */}
-      {confirmingBooking && (
+      {/* Confirm Return Modal — legacy / untracked booking (single condition) */}
+      {confirmingBooking && !isSerializedBooking(confirmingBooking) && (
         <Modal
           isOpen={!!confirmingBooking}
           onClose={handleCloseConfirmModal}
@@ -733,6 +847,180 @@ export const AdminReturns: React.FC = () => {
         </Modal>
       )}
 
+      {/* Confirm Return Modal — serialized booking (per-unit condition) */}
+      {confirmingBooking && isSerializedBooking(confirmingBooking) && (
+        <Modal
+          isOpen={!!confirmingBooking}
+          onClose={handleCloseConfirmModal}
+          title={`Confirm Equipment Return — #${confirmingBooking.id}`}
+          description="Inspect each returned unit by serial number and assess its own condition."
+          maxWidth="lg"
+        >
+          <form onSubmit={handleSubmitConfirmUnits} className="space-y-4">
+            {/* Booking Summary Box */}
+            <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Customer:</span>
+                <span className="font-semibold text-slate-800">
+                  {confirmingBooking.user?.name} ({confirmingBooking.user?.email})
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Equipment:</span>
+                <span className="font-semibold text-slate-800">
+                  {confirmingBooking.equipment?.name} &times; {confirmingBooking.pendingItems!.length} unit(s) in this return
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Scheduled Return:</span>
+                <span className="font-semibold text-slate-800">{formatDate(confirmingBooking.rentTo)}</span>
+              </div>
+              {estimatedFineForUnits.daysLate > 0 && (
+                <div className="flex justify-between text-rose-600 font-medium">
+                  <span>Lateness:</span>
+                  <span>{estimatedFineForUnits.daysLate} day(s) overdue</span>
+                </div>
+              )}
+            </div>
+
+            {/* Per-unit condition table */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-800">
+                Condition per unit <span className="text-rose-500">*</span>
+              </label>
+              <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+                {confirmingBooking.pendingItems!.map((item) => {
+                  const decision = unitDecisions[item.equipmentItemId] ?? {
+                    condition: '' as const,
+                    damagePreset: '25' as const,
+                    customDamageFee: '',
+                  };
+                  return (
+                    <div key={item.equipmentItemId} className="p-3 rounded-lg border border-slate-200 space-y-2">
+                      <p className="text-xs font-mono font-bold text-slate-700">{item.serialNumber}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {(['good', 'damaged', 'lost'] as const).map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => updateUnitDecision(item.equipmentItemId, { condition: c })}
+                            className={`p-2 rounded-md border text-center text-xs capitalize transition-colors cursor-pointer ${
+                              decision.condition === c
+                                ? 'border-[#1E3A5F] bg-[#1E3A5F]/5 ring-1 ring-[#1E3A5F]/20 font-bold text-[#1E3A5F]'
+                                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                            }`}
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+
+                      {decision.condition === 'damaged' && (
+                        <div className="p-2.5 rounded-md border border-amber-200 bg-amber-50/50 space-y-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                            {(['25', '50', 'custom'] as const).map((preset) => (
+                              <button
+                                key={preset}
+                                type="button"
+                                onClick={() => updateUnitDecision(item.equipmentItemId, { damagePreset: preset })}
+                                className={`p-1.5 rounded border text-center text-[11px] transition-colors cursor-pointer ${
+                                  decision.damagePreset === preset
+                                    ? 'bg-white border-[#1E3A5F] ring-1 ring-[#1E3A5F] font-bold text-[#1E3A5F]'
+                                    : 'bg-white/80 border-slate-200 text-slate-700 hover:bg-white'
+                                }`}
+                              >
+                                {preset === 'custom' ? 'Custom' : `${preset}% of price`}
+                              </button>
+                            ))}
+                          </div>
+                          {decision.damagePreset === 'custom' && (
+                            <input
+                              type="number"
+                              min="1"
+                              max={maxAllowableDamageFee}
+                              step="1"
+                              placeholder={`Enter amount in ₹ (max ${maxAllowableDamageFee})`}
+                              value={decision.customDamageFee}
+                              onChange={(e) =>
+                                updateUnitDecision(item.equipmentItemId, { customDamageFee: e.target.value })
+                              }
+                              className="w-full px-2.5 py-1.5 text-xs rounded-md border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F]"
+                            />
+                          )}
+                          <p className="text-[10px] text-slate-500">
+                            Fee: {formatCurrency(getUnitDamageFee(confirmingBooking, decision) || 0)} (max{' '}
+                            {formatCurrency(maxAllowableDamageFee)})
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Live Combined Fine Estimate Preview */}
+            <div className="p-3.5 rounded-lg bg-slate-900 text-white space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                  Estimated Combined Fine
+                </span>
+                <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">
+                  Estimate (Subject to DB Confirmation)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-1 border-t border-slate-800">
+                <div>
+                  <p className="text-[11px] text-slate-400">Late Fee</p>
+                  <p className="font-semibold text-slate-200">{formatCurrency(estimatedFineForUnits.lateFee)}</p>
+                  {estimatedFineForUnits.daysLate > 0 && (
+                    <p className="text-[9px] text-slate-400">
+                      ({estimatedFineForUnits.daysLate}d late &bull; max ₹2,100)
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-[11px] text-slate-400">Damage + Replacement</p>
+                  <p className="font-semibold text-slate-200">
+                    {formatCurrency(estimatedFineForUnits.conditionFee)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[11px] text-slate-400">Total Est. Fine</p>
+                  <p className="text-sm font-bold text-emerald-400">
+                    {formatCurrency(estimatedFineForUnits.totalEstimate)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCloseConfirmModal}
+                disabled={isSubmittingConfirm}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                isLoading={isSubmittingConfirm}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                Confirm & Settle Stock
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
       {/* Reject Return Modal */}
       {rejectingBooking && (
         <Modal
@@ -804,28 +1092,56 @@ export const AdminReturns: React.FC = () => {
                 Return Settled for Booking #{completedReturnData.booking.id}
               </div>
 
-              <div className="space-y-1.5 text-slate-700 pt-1 border-t border-emerald-200/60">
-                <div className="flex justify-between">
-                  <span>Verified Condition:</span>
-                  <span className="font-semibold capitalize text-slate-900">
-                    {completedReturnData.booking.returnCondition}
-                  </span>
+              {completedReturnData.items ? (
+                <div className="space-y-1.5 text-slate-700 pt-1 border-t border-emerald-200/60">
+                  <div className="flex justify-between">
+                    <span>Units Processed:</span>
+                    <span className="font-semibold text-slate-900">{completedReturnData.items.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Booking Status:</span>
+                    <span className="font-semibold capitalize text-slate-900">
+                      {completedReturnData.booking.status === 'returned'
+                        ? 'Fully Returned'
+                        : 'Active (remainder still outstanding)'}
+                    </span>
+                  </div>
+                  <div className="pt-1 space-y-1">
+                    {completedReturnData.items.map((item) => (
+                      <div key={item.equipmentItemId} className="flex justify-between text-[11px]">
+                        <span className="text-slate-500">Item #{item.equipmentItemId}</span>
+                        <span className="font-medium capitalize text-slate-800">
+                          {item.condition}
+                          {item.damageFee ? ` — ${formatCurrency(item.damageFee)}` : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Returned At:</span>
-                  <span className="font-semibold text-slate-900">
-                    {formatDateTime(completedReturnData.booking.returnedAt || undefined)}
-                  </span>
+              ) : (
+                <div className="space-y-1.5 text-slate-700 pt-1 border-t border-emerald-200/60">
+                  <div className="flex justify-between">
+                    <span>Verified Condition:</span>
+                    <span className="font-semibold capitalize text-slate-900">
+                      {completedReturnData.booking.returnCondition}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Returned At:</span>
+                    <span className="font-semibold text-slate-900">
+                      {formatDateTime(completedReturnData.booking.returnedAt || undefined)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Stock Restored:</span>
+                    <span className="font-semibold text-slate-900">
+                      {completedReturnData.booking.returnCondition === 'lost'
+                        ? 'No (Lost Item)'
+                        : `Yes (+${completedReturnData.booking.quantity} units)`}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Stock Restored:</span>
-                  <span className="font-semibold text-slate-900">
-                    {completedReturnData.booking.returnCondition === 'lost'
-                      ? 'No (Lost Item)'
-                      : `Yes (+${completedReturnData.booking.quantity} units)`}
-                  </span>
-                </div>
-              </div>
+              )}
 
               {/* Fine Summary if fine created */}
               {completedReturnData.fine ? (
