@@ -274,8 +274,8 @@ export const MyFines: React.FC = () => {
           onClose={() => setPayingFine(null)}
           onConfirm={handlePay}
           title="Pay Fine"
-          message={`Pay ${formatCurrency(payingFine.fine.amount)} for fine #${payingFine.fine.id} (${payingFine.equipment.name})? This is a placeholder payment — no real charge will be made yet.`}
-          confirmText="Yes, Mark as Paid"
+          message={`Pay ${formatCurrency(payingFine.fine.amount)} for fine #${payingFine.fine.id} (${payingFine.equipment.name})?`}
+          confirmText="Pay Now"
           variant="primary"
           isLoading={isPaying}
         />
