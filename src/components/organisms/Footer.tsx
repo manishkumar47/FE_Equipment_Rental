@@ -1,3 +1,4 @@
+import { URL } from '../../routes/url-constant';
 import React from 'react';
 import { Boxes } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -17,13 +18,13 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            <Link to="/equipment" className="hover:text-slate-900 transition-colors">
+            <Link to={URL.EQUIPMENT} className="hover:text-slate-900 transition-colors">
               Equipment Catalog
             </Link>
-            <Link to="/rentals" className="hover:text-slate-900 transition-colors">
+            <Link to={URL.RENTALS} className="hover:text-slate-900 transition-colors">
               Rental History
             </Link>
-            <Link to="/profile" className="hover:text-slate-900 transition-colors">
+            <Link to={URL.PROFILE} className="hover:text-slate-900 transition-colors">
               User Profile
             </Link>
           </div>

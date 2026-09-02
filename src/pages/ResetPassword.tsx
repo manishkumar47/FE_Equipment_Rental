@@ -1,3 +1,4 @@
+import { URL } from '../routes/url-constant';
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -5,8 +6,8 @@ import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/auth.api';
 import { getErrorMessage } from '../api/client';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
+import { Input } from '../components/atoms/Input';
+import { Button } from '../components/atoms/Button';
 import { Lock, ArrowLeft, CheckCircle2, AlertTriangle, KeyRound } from 'lucide-react';
 
 export const ResetPassword: React.FC = () => {
@@ -41,12 +42,12 @@ export const ResetPassword: React.FC = () => {
         </p>
 
         <div className="flex flex-col gap-2">
-          <Link to="/forgot-password">
+          <Link to={URL.FORGOT_PASSWORD}>
             <Button variant="primary" size="md" className="w-full" leftIcon={<KeyRound className="w-4 h-4" />}>
               Request New Reset Link
             </Button>
           </Link>
-          <Link to="/login">
+          <Link to={URL.LOGIN}>
             <Button variant="ghost" size="sm" className="w-full" leftIcon={<ArrowLeft className="w-4 h-4" />}>
               Back to Sign In
             </Button>
@@ -71,7 +72,7 @@ export const ResetPassword: React.FC = () => {
           variant="primary"
           size="md"
           className="w-full"
-          onClick={() => navigate('/login')}
+          onClick={() => navigate(URL.LOGIN)}
         >
           Sign In Now
         </Button>
@@ -175,7 +176,7 @@ export const ResetPassword: React.FC = () => {
 
       <div className="mt-6 pt-6 border-t border-slate-100 text-center">
         <Link
-          to="/login"
+          to={URL.LOGIN}
           className="text-xs text-slate-500 hover:text-slate-800 font-medium inline-flex items-center gap-1"
         >
           <ArrowLeft className="w-3 h-3" /> Back to Sign In

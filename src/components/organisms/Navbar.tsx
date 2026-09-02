@@ -1,8 +1,9 @@
+import { URL } from '../../routes/url-constant';
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
+import { Button } from '../atoms/Button';
+import { Badge } from '../atoms/Badge';
 import {
   Boxes,
   CalendarCheck,
@@ -27,13 +28,13 @@ export const Navbar: React.FC = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const isActive = (path: string) => {
-    if (path === '/equipment' && location.pathname.startsWith('/equipment')) return true;
+    if (path === URL.EQUIPMENT && location.pathname.startsWith(URL.EQUIPMENT)) return true;
     return location.pathname === path;
   };
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate(URL.LOGIN);
   };
 
   return (
@@ -42,7 +43,7 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo & Brand */}
           <div className="flex items-center gap-4 lg:gap-6">
-            <Link to="/" className="flex items-center gap-2.5 group shrink-0">
+            <Link to={URL.HOME} className="flex items-center gap-2.5 group shrink-0">
               <div className="w-9 h-9 rounded-md bg-[#1E3A5F] flex items-center justify-center text-white shadow-2xs group-hover:bg-[#152843] transition-colors">
                 <Boxes className="w-5 h-5" />
               </div>
@@ -56,9 +57,9 @@ export const Navbar: React.FC = () => {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1">
               <Link
-                to="/equipment"
+                to={URL.EQUIPMENT}
                 className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                  isActive('/equipment')
+                  isActive(URL.EQUIPMENT)
                     ? 'bg-slate-100 text-slate-900 font-semibold'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }`}
@@ -69,9 +70,9 @@ export const Navbar: React.FC = () => {
 
               {isAuthenticated && (
                 <Link
-                  to="/rentals"
+                  to={URL.RENTALS}
                   className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                    isActive('/rentals')
+                    isActive(URL.RENTALS)
                       ? 'bg-slate-100 text-slate-900 font-semibold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
@@ -83,9 +84,9 @@ export const Navbar: React.FC = () => {
 
               {isAuthenticated && (
                 <Link
-                  to="/fines"
+                  to={URL.FINES}
                   className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                    isActive('/fines')
+                    isActive(URL.FINES)
                       ? 'bg-slate-100 text-slate-900 font-semibold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
@@ -99,9 +100,9 @@ export const Navbar: React.FC = () => {
               {isAuthenticated && isAdmin && (
                 <div className="flex items-center gap-1 pl-2 border-l border-slate-200 ml-1">
                   <Link
-                    to="/admin/dashboard"
+                    to={URL.ADMIN_DASHBOARD}
                     className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                      isActive('/admin/dashboard')
+                      isActive(URL.ADMIN_DASHBOARD)
                         ? 'bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
@@ -110,9 +111,9 @@ export const Navbar: React.FC = () => {
                     Dashboard
                   </Link>
                   <Link
-                    to="/admin/equipment"
+                    to={URL.ADMIN_EQUIPMENT}
                     className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                      isActive('/admin/equipment')
+                      isActive(URL.ADMIN_EQUIPMENT)
                         ? 'bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
@@ -121,9 +122,9 @@ export const Navbar: React.FC = () => {
                     Fleet
                   </Link>
                   <Link
-                    to="/admin/bookings"
+                    to={URL.ADMIN_BOOKINGS}
                     className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                      isActive('/admin/bookings')
+                      isActive(URL.ADMIN_BOOKINGS)
                         ? 'bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
@@ -132,9 +133,9 @@ export const Navbar: React.FC = () => {
                     Bookings
                   </Link>
                   <Link
-                    to="/admin/booking-requests"
+                    to={URL.ADMIN_BOOKING_REQUESTS}
                     className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                      isActive('/admin/booking-requests')
+                      isActive(URL.ADMIN_BOOKING_REQUESTS)
                         ? 'bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
@@ -143,9 +144,9 @@ export const Navbar: React.FC = () => {
                     Requests
                   </Link>
                   <Link
-                    to="/admin/returns"
+                    to={URL.ADMIN_RETURNS}
                     className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                      isActive('/admin/returns')
+                      isActive(URL.ADMIN_RETURNS)
                         ? 'bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
@@ -154,9 +155,9 @@ export const Navbar: React.FC = () => {
                     Returns
                   </Link>
                   <Link
-                    to="/admin/users"
+                    to={URL.ADMIN_USERS}
                     className={`px-2.5 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                      isActive('/admin/users')
+                      isActive(URL.ADMIN_USERS)
                         ? 'bg-[#1E3A5F]/10 text-[#1E3A5F] font-semibold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
@@ -216,7 +217,7 @@ export const Navbar: React.FC = () => {
 
                       <div className="py-1">
                         <Link
-                          to="/profile"
+                          to={URL.PROFILE}
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
                         >
@@ -224,7 +225,7 @@ export const Navbar: React.FC = () => {
                           My Profile
                         </Link>
                         <Link
-                          to="/rentals"
+                          to={URL.RENTALS}
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
                         >
@@ -232,7 +233,7 @@ export const Navbar: React.FC = () => {
                           Rental History
                         </Link>
                         <Link
-                          to="/fines"
+                          to={URL.FINES}
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
                         >
@@ -241,7 +242,7 @@ export const Navbar: React.FC = () => {
                         </Link>
                         {isAdmin && (
                           <Link
-                            to="/admin/dashboard"
+                            to={URL.ADMIN_DASHBOARD}
                             onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-[#1E3A5F] hover:bg-[#1E3A5F]/5 transition-colors"
                           >
@@ -269,12 +270,12 @@ export const Navbar: React.FC = () => {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Link to="/login">
+                <Link to={URL.LOGIN}>
                   <Button variant="ghost" size="sm">
                     Sign In
                   </Button>
                 </Link>
-                <Link to="/register">
+                <Link to={URL.REGISTER}>
                   <Button variant="primary" size="sm">
                     Create Account
                   </Button>
@@ -300,7 +301,7 @@ export const Navbar: React.FC = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2">
           <Link
-            to="/equipment"
+            to={URL.EQUIPMENT}
             onClick={() => setIsMobileMenuOpen(false)}
             className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
@@ -309,7 +310,7 @@ export const Navbar: React.FC = () => {
           </Link>
           {isAuthenticated && (
             <Link
-              to="/rentals"
+              to={URL.RENTALS}
               onClick={() => setIsMobileMenuOpen(false)}
               className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
@@ -319,7 +320,7 @@ export const Navbar: React.FC = () => {
           )}
           {isAuthenticated && (
             <Link
-              to="/fines"
+              to={URL.FINES}
               onClick={() => setIsMobileMenuOpen(false)}
               className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
@@ -334,7 +335,7 @@ export const Navbar: React.FC = () => {
                 Admin Panel
               </p>
               <Link
-                to="/admin/dashboard"
+                to={URL.ADMIN_DASHBOARD}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
@@ -342,7 +343,7 @@ export const Navbar: React.FC = () => {
                 Dashboard
               </Link>
               <Link
-                to="/admin/equipment"
+                to={URL.ADMIN_EQUIPMENT}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
@@ -350,7 +351,7 @@ export const Navbar: React.FC = () => {
                 Manage Equipment
               </Link>
               <Link
-                to="/admin/bookings"
+                to={URL.ADMIN_BOOKINGS}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
@@ -358,7 +359,7 @@ export const Navbar: React.FC = () => {
                 All Bookings
               </Link>
               <Link
-                to="/admin/booking-requests"
+                to={URL.ADMIN_BOOKING_REQUESTS}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
@@ -366,7 +367,7 @@ export const Navbar: React.FC = () => {
                 Booking Requests
               </Link>
               <Link
-                to="/admin/returns"
+                to={URL.ADMIN_RETURNS}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
@@ -374,7 +375,7 @@ export const Navbar: React.FC = () => {
                 Return Requests
               </Link>
               <Link
-                to="/admin/users"
+                to={URL.ADMIN_USERS}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
@@ -397,7 +398,7 @@ export const Navbar: React.FC = () => {
                   </div>
                 </div>
                 <Link
-                  to="/profile"
+                  to={URL.PROFILE}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
@@ -417,12 +418,12 @@ export const Navbar: React.FC = () => {
               </div>
             ) : (
               <div className="flex flex-col gap-2 pt-2">
-                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                <Link to={URL.LOGIN} onClick={() => setIsMobileMenuOpen(false)}>
                   <Button variant="outline" size="sm" className="w-full">
                     Sign In
                   </Button>
                 </Link>
-                <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                <Link to={URL.REGISTER} onClick={() => setIsMobileMenuOpen(false)}>
                   <Button variant="primary" size="sm" className="w-full">
                     Create Account
                   </Button>

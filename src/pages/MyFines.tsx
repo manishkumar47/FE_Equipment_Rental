@@ -1,3 +1,4 @@
+import { URL } from '../routes/url-constant';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -7,12 +8,12 @@ import { getErrorMessage } from '../api/client';
 import { formatCurrency, formatDate, formatDateTime } from '../utils/formatters';
 import { getEquipmentIcon } from '../utils/categoryIcons';
 import type { MyFineEntry } from '../types/api.types';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
-import { Card, CardContent } from '../components/ui/Card';
-import { EmptyState } from '../components/ui/EmptyState';
-import { Skeleton } from '../components/ui/Skeleton';
-import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { Button } from '../components/atoms/Button';
+import { Badge } from '../components/atoms/Badge';
+import { Card, CardContent } from '../components/molecules/Card';
+import { EmptyState } from '../components/molecules/EmptyState';
+import { Skeleton } from '../components/atoms/Skeleton';
+import { ConfirmDialog } from '../components/molecules/ConfirmDialog';
 import {
   Receipt,
   RefreshCw,
@@ -169,7 +170,7 @@ export const MyFines: React.FC = () => {
           title="No Fines on Your Account"
           description="You have no late, damage, or replacement charges. Keep up the clean rental record!"
           actionLabel="Browse Equipment"
-          onAction={() => window.location.assign('/equipment')}
+          onAction={() => window.location.assign(URL.EQUIPMENT)}
         />
       ) : (
         <div className="space-y-4">
@@ -283,7 +284,7 @@ export const MyFines: React.FC = () => {
       {fines.length > 0 && (
         <div className="text-center pt-2">
           <Link
-            to="/rentals"
+            to={URL.RENTALS}
             className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
           >
             View My Rentals <ArrowRight className="w-3.5 h-3.5" />

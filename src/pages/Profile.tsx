@@ -1,12 +1,13 @@
+import { URL } from '../routes/url-constant';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { userApi } from '../api/user.api';
 import { formatDate } from '../utils/formatters';
 import type { User as UserType } from '../types/api.types';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
+import { Button } from '../components/atoms/Button';
+import { Badge } from '../components/atoms/Badge';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/molecules/Card';
 import {
   User as UserIcon,
   Mail,
@@ -63,13 +64,13 @@ export const Profile: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link to="/forgot-password">
+          <Link to={URL.FORGOT_PASSWORD}>
             <Button variant="outline" size="sm" leftIcon={<Lock className="w-3.5 h-3.5" />}>
               Reset Password
             </Button>
           </Link>
           {isAdmin && (
-            <Link to="/admin/dashboard">
+            <Link to={URL.ADMIN_DASHBOARD}>
               <Button variant="primary" size="sm" leftIcon={<Shield className="w-3.5 h-3.5" />}>
                 Admin Console
               </Button>
@@ -130,12 +131,12 @@ export const Profile: React.FC = () => {
             </div>
 
             <div className="pt-2 flex flex-col gap-2">
-              <Link to="/rentals">
+              <Link to={URL.RENTALS}>
                 <Button variant="outline" size="sm" className="w-full justify-start" leftIcon={<CalendarCheck className="w-4 h-4" />}>
                   View My Equipment Rentals
                 </Button>
               </Link>
-              <Link to="/equipment">
+              <Link to={URL.EQUIPMENT}>
                 <Button variant="outline" size="sm" className="w-full justify-start" leftIcon={<Boxes className="w-4 h-4" />}>
                   Browse Fleet Catalog
                 </Button>

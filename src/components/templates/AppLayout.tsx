@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Navbar } from './Navbar';
-import { Footer } from './Footer';
+import { Navbar } from '../organisms/Navbar';
+import { Footer } from '../organisms/Footer';
 
 export const AppLayout: React.FC = () => {
   return (

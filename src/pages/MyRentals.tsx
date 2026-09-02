@@ -1,3 +1,4 @@
+import { URL } from '../routes/url-constant';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -14,13 +15,13 @@ import {
 } from '../utils/formatters';
 import { getEquipmentIcon } from '../utils/categoryIcons';
 import type { RentalBookingItem } from '../types/api.types';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
-import { Card, CardContent } from '../components/ui/Card';
-import { EmptyState } from '../components/ui/EmptyState';
-import { Skeleton } from '../components/ui/Skeleton';
-import { ConfirmDialog } from '../components/ui/ConfirmDialog';
-import { Modal } from '../components/ui/Modal';
+import { Button } from '../components/atoms/Button';
+import { Badge } from '../components/atoms/Badge';
+import { Card, CardContent } from '../components/molecules/Card';
+import { EmptyState } from '../components/molecules/EmptyState';
+import { Skeleton } from '../components/atoms/Skeleton';
+import { ConfirmDialog } from '../components/molecules/ConfirmDialog';
+import { Modal } from '../components/molecules/Modal';
 import {
   CalendarCheck,
   Calendar,
@@ -146,7 +147,7 @@ export const MyRentals: React.FC = () => {
           >
             Refresh
           </Button>
-          <Link to="/equipment">
+          <Link to={URL.EQUIPMENT}>
             <Button variant="primary" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
               Browse Catalog
             </Button>
@@ -187,7 +188,7 @@ export const MyRentals: React.FC = () => {
           title="No Rental Bookings Found"
           description="You haven't reserved any equipment yet. Explore our high-grade inventory and schedule your first rental."
           actionLabel="Explore Equipment"
-          onAction={() => window.location.assign('/equipment')}
+          onAction={() => window.location.assign(URL.EQUIPMENT)}
         />
       ) : (
         <div className="space-y-4">

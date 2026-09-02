@@ -5,13 +5,13 @@ import { useToast } from '../../context/ToastContext';
 import { getErrorMessage } from '../../api/client';
 import { formatDate, formatCurrency, calculateRentalDays } from '../../utils/formatters';
 import type { RentalBookingItem } from '../../types/api.types';
-import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
-import { Card, CardHeader, CardContent } from '../../components/ui/Card';
-import { Modal } from '../../components/ui/Modal';
-import { Skeleton } from '../../components/ui/Skeleton';
-import { EmptyState } from '../../components/ui/EmptyState';
-import { Pagination } from '../../components/ui/Pagination';
+import { Button } from '../../components/atoms/Button';
+import { Badge } from '../../components/atoms/Badge';
+import { Card, CardHeader, CardContent } from '../../components/molecules/Card';
+import { Modal } from '../../components/molecules/Modal';
+import { Skeleton } from '../../components/atoms/Skeleton';
+import { EmptyState } from '../../components/molecules/EmptyState';
+import { Pagination } from '../../components/molecules/Pagination';
 import {
   Inbox,
   Search,

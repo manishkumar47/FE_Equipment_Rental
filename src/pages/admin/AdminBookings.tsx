@@ -10,13 +10,13 @@ import {
   getBookingStatus,
 } from '../../utils/formatters';
 import type { BookingStatus, RentalBookingItem } from '../../types/api.types';
-import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
-import { Card, CardHeader, CardContent } from '../../components/ui/Card';
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
-import { Skeleton } from '../../components/ui/Skeleton';
-import { EmptyState } from '../../components/ui/EmptyState';
-import { Pagination } from '../../components/ui/Pagination';
+import { Button } from '../../components/atoms/Button';
+import { Badge } from '../../components/atoms/Badge';
+import { Card, CardHeader, CardContent } from '../../components/molecules/Card';
+import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
+import { Skeleton } from '../../components/atoms/Skeleton';
+import { EmptyState } from '../../components/molecules/EmptyState';
+import { Pagination } from '../../components/molecules/Pagination';
 import {
   CalendarCheck,
   Search,

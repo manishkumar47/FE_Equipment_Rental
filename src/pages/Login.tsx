@@ -1,3 +1,4 @@
+import { URL } from '../routes/url-constant';
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -5,8 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { authApi } from '../api/auth.api';
 import { getErrorMessage } from '../api/client';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
+import { Input } from '../components/atoms/Input';
+import { Button } from '../components/atoms/Button';
 import { Mail, Lock, LogIn, ArrowRight } from 'lucide-react';
 
 export const Login: React.FC = () => {
@@ -21,7 +22,7 @@ export const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/equipment';
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || URL.EQUIPMENT;
 
   const validate = () => {
     const errs: { email?: string; password?: string } = {};
@@ -50,7 +51,7 @@ export const Login: React.FC = () => {
       showToast(t('LOGIN_WELCOME_BACK', { name: session.name }), 'success');
 
       if (session.role === 'ADMIN') {
-        navigate('/admin/dashboard', { replace: true });
+        navigate(URL.ADMIN_DASHBOARD, { replace: true });
       } else {
         navigate(from, { replace: true });
       }
@@ -99,7 +100,7 @@ export const Login: React.FC = () => {
               Password
             </label>
             <Link
-              to="/forgot-password"
+              to={URL.FORGOT_PASSWORD}
               className="text-xs text-[#1E3A5F] hover:underline font-medium"
             >
               Forgot password?
@@ -132,7 +133,7 @@ export const Login: React.FC = () => {
         <p className="text-xs text-slate-500">
           Don't have an account yet?{' '}
           <Link
-            to="/register"
+            to={URL.REGISTER}
             className="text-[#1E3A5F] font-semibold hover:underline inline-flex items-center gap-1"
           >
             Create account <ArrowRight className="w-3 h-3" />
