@@ -226,11 +226,6 @@ export const EquipmentDetails: React.FC = () => {
                     <Badge variant={isAvailable ? 'success' : 'danger'} size="sm">
                       {isAvailable ? `${equipment.quantity} Units Available` : 'Out of Stock'}
                     </Badge>
-                    {!!equipment.totalItemCount && (
-                      <Badge variant="outline" size="sm">
-                        {equipment.availableItemCount ?? 0}/{equipment.totalItemCount} tracked units ready
-                      </Badge>
-                    )}
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">
                     {equipment.name}
