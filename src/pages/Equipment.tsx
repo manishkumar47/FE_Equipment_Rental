@@ -1,3 +1,4 @@
+import { URL } from '../routes/url-constant';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -11,13 +12,13 @@ import { formatCurrency, calculateRentalDays } from '../utils/formatters';
 import { getEquipmentIcon } from '../utils/categoryIcons';
 import { useInfiniteScrollSentinel } from '../hooks/useInfiniteScrollSentinel';
 import type { EquipmentItem, Category, EquipmentSortBy } from '../types/api.types';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
-import { Card, CardContent } from '../components/ui/Card';
-import { Skeleton } from '../components/ui/Skeleton';
-import { Spinner } from '../components/ui/Spinner';
-import { EmptyState } from '../components/ui/EmptyState';
-import { Modal } from '../components/ui/Modal';
+import { Button } from '../components/atoms/Button';
+import { Badge } from '../components/atoms/Badge';
+import { Card, CardContent } from '../components/molecules/Card';
+import { Skeleton } from '../components/atoms/Skeleton';
+import { Spinner } from '../components/atoms/Spinner';
+import { EmptyState } from '../components/molecules/EmptyState';
+import { Modal } from '../components/molecules/Modal';
 import {
   Search,
   SlidersHorizontal,
@@ -135,7 +136,7 @@ export const Equipment: React.FC = () => {
   const handleOpenRentModal = (item: EquipmentItem) => {
     if (!isAuthenticated) {
       showToast(t('SIGN_IN_TO_RENT_REQUIRED'), 'info');
-      navigate('/login', { state: { from: { pathname: '/equipment' } } });
+      navigate(URL.LOGIN, { state: { from: { pathname: URL.EQUIPMENT } } });
       return;
     }
     setRentingItem(item);
@@ -241,7 +242,7 @@ export const Equipment: React.FC = () => {
 
         <div className="flex items-center gap-3">
           {isAuthenticated && (
-            <Link to="/rentals">
+            <Link to={URL.RENTALS}>
               <Button variant="outline" size="md" leftIcon={<Clock className="w-4 h-4" />}>
                 My Rentals
               </Button>
@@ -435,7 +436,7 @@ export const Equipment: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                      <Link to={`/equipment/${item.id}`}>
+                      <Link to={URL.EQUIPMENT_DETAILS(item.id)}>
                         <Button variant="ghost" size="sm" className="text-xs px-2.5">
                           Specs
                         </Button>
@@ -652,7 +653,7 @@ export const Equipment: React.FC = () => {
                 className="w-1/2"
                 onClick={() => {
                   setBookingConfirmation(null);
-                  navigate('/rentals');
+                  navigate(URL.RENTALS);
                 }}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
               >

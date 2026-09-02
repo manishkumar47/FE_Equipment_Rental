@@ -6,14 +6,14 @@ import { useAuth } from '../../context/AuthContext';
 import { getErrorMessage } from '../../api/client';
 import { formatDate } from '../../utils/formatters';
 import type { User, Role } from '../../types/api.types';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Badge } from '../../components/ui/Badge';
-import { Card, CardHeader, CardContent } from '../../components/ui/Card';
-import { Modal } from '../../components/ui/Modal';
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
-import { Skeleton } from '../../components/ui/Skeleton';
-import { EmptyState } from '../../components/ui/EmptyState';
+import { Button } from '../../components/atoms/Button';
+import { Input } from '../../components/atoms/Input';
+import { Badge } from '../../components/atoms/Badge';
+import { Card, CardHeader, CardContent } from '../../components/molecules/Card';
+import { Modal } from '../../components/molecules/Modal';
+import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
+import { Skeleton } from '../../components/atoms/Skeleton';
+import { EmptyState } from '../../components/molecules/EmptyState';
 import {
   Users,
   UserPlus,

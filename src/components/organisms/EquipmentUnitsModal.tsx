@@ -4,13 +4,13 @@ import { equipmentUnitApi } from '../../api/equipmentUnit.api';
 import { useToast } from '../../context/ToastContext';
 import { getErrorMessage } from '../../api/client';
 import type { EquipmentItem, EquipmentUnit, EquipmentUnitStatus } from '../../types/api.types';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
-import { Badge } from '../ui/Badge';
-import { Modal } from '../ui/Modal';
-import { ConfirmDialog } from '../ui/ConfirmDialog';
-import { Skeleton } from '../ui/Skeleton';
-import { EmptyState } from '../ui/EmptyState';
+import { Button } from '../atoms/Button';
+import { Input } from '../atoms/Input';
+import { Badge } from '../atoms/Badge';
+import { Modal } from '../molecules/Modal';
+import { ConfirmDialog } from '../molecules/ConfirmDialog';
+import { Skeleton } from '../atoms/Skeleton';
+import { EmptyState } from '../molecules/EmptyState';
 import { Plus, Trash2, Edit2, Check, X as XIcon, Barcode } from 'lucide-react';
 
 const STATUS_OPTIONS: EquipmentUnitStatus[] = [

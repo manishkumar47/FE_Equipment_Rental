@@ -1,3 +1,4 @@
+import { URL } from '../../routes/url-constant';
 import React from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { Boxes, ShieldCheck, CheckCircle2, Server, Cpu, Clock } from 'lucide-react';
@@ -17,7 +18,7 @@ export const AuthLayout: React.FC = () => {
         />
 
         <div className="relative z-10">
-          <Link to="/" className="flex items-center gap-3 w-fit group">
+          <Link to={URL.HOME} className="flex items-center gap-3 w-fit group">
             <div className="w-10 h-10 rounded-md bg-white/10 border border-white/20 flex items-center justify-center text-white backdrop-blur-xs group-hover:bg-white/20 transition-colors">
               <Boxes className="w-6 h-6" />
             </div>

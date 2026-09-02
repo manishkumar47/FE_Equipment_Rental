@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AppLayout } from '../components/layout/AppLayout';
-import { AuthLayout } from '../components/layout/AuthLayout';
+import { AppLayout } from '../components/templates/AppLayout';
+import { AuthLayout } from '../components/templates/AuthLayout';
 import { ProtectedRoute } from './ProtectedRoute';
 import { useLocale } from '../i18n/useLocale';
 import { isSupportedLocale, type LocaleCode } from '../i18n/locales';
+import { URL, EQUIPMENT_DETAILS_PATTERN } from './url-constant';
 
 // Auth Pages
 import { Login } from '../pages/Login';
@@ -64,24 +65,24 @@ export const AppRoutes: React.FC = () => {
     <Routes location={resolvedLocation}>
       {/* Public Auth Routes */}
       <Route element={<AuthLayout />}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path={URL.LOGIN} element={<Login />} />
+        <Route path={URL.REGISTER} element={<Register />} />
+        <Route path={URL.FORGOT_PASSWORD} element={<ForgotPassword />} />
+        <Route path={URL.RESET_PASSWORD} element={<ResetPassword />} />
       </Route>
 
       {/* Main Application Routes */}
       <Route element={<AppLayout />}>
         {/* Default Landing */}
-        <Route path="/" element={<Navigate to="/equipment" replace />} />
+        <Route path={URL.HOME} element={<Navigate to={URL.EQUIPMENT} replace />} />
 
         {/* Public Browsing */}
-        <Route path="/equipment" element={<Equipment />} />
-        <Route path="/equipment/:id" element={<EquipmentDetails />} />
+        <Route path={URL.EQUIPMENT} element={<Equipment />} />
+        <Route path={EQUIPMENT_DETAILS_PATTERN} element={<EquipmentDetails />} />
 
         {/* Protected User Routes */}
         <Route
-          path="/rentals"
+          path={URL.RENTALS}
           element={
             <ProtectedRoute>
               <MyRentals />
@@ -89,7 +90,7 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
-          path="/fines"
+          path={URL.FINES}
           element={
             <ProtectedRoute>
               <MyFines />
@@ -97,7 +98,7 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
-          path="/profile"
+          path={URL.PROFILE}
           element={
             <ProtectedRoute>
               <Profile />
@@ -107,7 +108,7 @@ export const AppRoutes: React.FC = () => {
 
         {/* Protected Admin Routes */}
         <Route
-          path="/admin/dashboard"
+          path={URL.ADMIN_DASHBOARD}
           element={
             <ProtectedRoute requireAdmin>
               <AdminDashboard />
@@ -115,7 +116,7 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
-          path="/admin/equipment"
+          path={URL.ADMIN_EQUIPMENT}
           element={
             <ProtectedRoute requireAdmin>
               <AdminEquipment />
@@ -123,7 +124,7 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
-          path="/admin/bookings"
+          path={URL.ADMIN_BOOKINGS}
           element={
             <ProtectedRoute requireAdmin>
               <AdminBookings />
@@ -131,7 +132,7 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
-          path="/admin/booking-requests"
+          path={URL.ADMIN_BOOKING_REQUESTS}
           element={
             <ProtectedRoute requireAdmin>
               <AdminBookingRequests />
@@ -139,7 +140,7 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
-          path="/admin/returns"
+          path={URL.ADMIN_RETURNS}
           element={
             <ProtectedRoute requireAdmin>
               <AdminReturns />
@@ -147,7 +148,7 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
-          path="/admin/users"
+          path={URL.ADMIN_USERS}
           element={
             <ProtectedRoute requireAdmin>
               <AdminUsers />
@@ -156,7 +157,7 @@ export const AppRoutes: React.FC = () => {
         />
 
         {/* 404 Catch-all */}
-        <Route path="*" element={<NotFound />} />
+        <Route path={URL.NOT_FOUND} element={<NotFound />} />
       </Route>
     </Routes>
   );

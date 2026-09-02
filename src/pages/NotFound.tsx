@@ -1,6 +1,7 @@
+import { URL } from '../routes/url-constant';
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '../components/ui/Button';
+import { Button } from '../components/atoms/Button';
 import { Boxes, ArrowLeft } from 'lucide-react';
 
 export const NotFound: React.FC = () => {
@@ -17,7 +18,7 @@ export const NotFound: React.FC = () => {
         </p>
       </div>
       <div className="pt-2">
-        <Link to="/equipment">
+        <Link to={URL.EQUIPMENT}>
           <Button variant="primary" size="md" leftIcon={<ArrowLeft className="w-4 h-4" />}>
             Back to Equipment Catalog
           </Button>

@@ -1,3 +1,4 @@
+import { URL } from '../routes/url-constant';
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -5,8 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { authApi } from '../api/auth.api';
 import { getErrorMessage, getRetryAfterSeconds } from '../api/client';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
+import { Input } from '../components/atoms/Input';
+import { Button } from '../components/atoms/Button';
 import {
   Mail,
   Lock,
@@ -30,7 +31,7 @@ export const Register: React.FC = () => {
 
   const from =
     (location.state as { from?: { pathname: string } })?.from?.pathname ||
-    '/equipment';
+    URL.EQUIPMENT;
 
   // Step state: 'form' (step 1) or 'otp' (step 2)
   const [step, setStep] = useState<'form' | 'otp'>('form');
@@ -249,7 +250,7 @@ export const Register: React.FC = () => {
       showToast(t('REGISTER_WELCOME', { name: session.name }), 'success');
 
       if (session.role === 'ADMIN') {
-        navigate('/admin/dashboard', { replace: true });
+        navigate(URL.ADMIN_DASHBOARD, { replace: true });
       } else {
         navigate(from, { replace: true });
       }
@@ -573,7 +574,7 @@ export const Register: React.FC = () => {
         <p className="text-xs text-slate-500">
           Already have an account?{' '}
           <Link
-            to="/login"
+            to={URL.LOGIN}
             className="text-[#1E3A5F] font-semibold hover:underline inline-flex items-center gap-1"
           >
             <ArrowLeft className="w-3 h-3" /> Back to Sign In

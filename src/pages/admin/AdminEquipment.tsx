@@ -7,17 +7,17 @@ import { formatCurrency } from "../../utils/formatters";
 import { getEquipmentIcon } from "../../utils/categoryIcons";
 import type { Category, EquipmentItem } from "../../types/api.types";
 import type { CsvRow } from "../../utils/csvValidation";
-import { Button } from "../../components/ui/Button";
-import { Input } from "../../components/ui/Input";
-import { Badge } from "../../components/ui/Badge";
-import { Card, CardHeader, CardContent } from "../../components/ui/Card";
-import { Modal } from "../../components/ui/Modal";
-import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
-import { Skeleton } from "../../components/ui/Skeleton";
-import { EmptyState } from "../../components/ui/EmptyState";
-import { Pagination } from "../../components/ui/Pagination";
+import { Button } from "../../components/atoms/Button";
+import { Input } from "../../components/atoms/Input";
+import { Badge } from "../../components/atoms/Badge";
+import { Card, CardHeader, CardContent } from "../../components/molecules/Card";
+import { Modal } from "../../components/molecules/Modal";
+import { ConfirmDialog } from "../../components/molecules/ConfirmDialog";
+import { Skeleton } from "../../components/atoms/Skeleton";
+import { EmptyState } from "../../components/molecules/EmptyState";
+import { Pagination } from "../../components/molecules/Pagination";
 import { validateEquipmentCsv } from "../../utils/csvValidation";
-import { EquipmentUnitsModal } from "../../components/admin/EquipmentUnitsModal";
+import { EquipmentUnitsModal } from "../../components/organisms/EquipmentUnitsModal";
 import {
   Boxes,
   Plus,

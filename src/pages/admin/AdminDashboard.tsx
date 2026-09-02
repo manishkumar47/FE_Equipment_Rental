@@ -1,3 +1,4 @@
+import { URL } from '../../routes/url-constant';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { equipmentApi } from '../../api/equipment.api';
@@ -5,10 +6,10 @@ import { bookingApi } from '../../api/booking.api';
 import { userApi } from '../../api/user.api';
 import { formatCurrency, formatDate, getBookingStatus } from '../../utils/formatters';
 import type { EquipmentItem, RentalBookingItem, User } from '../../types/api.types';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
-import { Skeleton } from '../../components/ui/Skeleton';
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/molecules/Card';
+import { Button } from '../../components/atoms/Button';
+import { Badge } from '../../components/atoms/Badge';
+import { Skeleton } from '../../components/atoms/Skeleton';
 import {
   Boxes,
   CalendarCheck,
@@ -73,17 +74,17 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <Link to="/admin/returns">
+          <Link to={URL.ADMIN_RETURNS}>
             <Button variant="outline" size="sm" className="border-amber-300 bg-amber-50/50 hover:bg-amber-100/50 text-amber-900" leftIcon={<RotateCcw className="w-4 h-4 text-amber-700" />}>
               Return Requests
             </Button>
           </Link>
-          <Link to="/admin/equipment">
+          <Link to={URL.ADMIN_EQUIPMENT}>
             <Button variant="primary" size="sm" leftIcon={<PlusCircle className="w-4 h-4" />}>
               Manage Equipment
             </Button>
           </Link>
-          <Link to="/admin/bookings">
+          <Link to={URL.ADMIN_BOOKINGS}>
             <Button variant="outline" size="sm" leftIcon={<CalendarCheck className="w-4 h-4" />}>
               View All Bookings
             </Button>
@@ -207,7 +208,7 @@ export const AdminDashboard: React.FC = () => {
               <CalendarCheck className="w-4 h-4 text-[#1E3A5F]" /> Recent Reservations
             </CardTitle>
             <Link
-              to="/admin/bookings"
+              to={URL.ADMIN_BOOKINGS}
               className="text-xs font-semibold text-[#1E3A5F] hover:underline flex items-center gap-1"
             >
               View all <ArrowRight className="w-3 h-3" />
@@ -287,7 +288,7 @@ export const AdminDashboard: React.FC = () => {
               <Boxes className="w-4 h-4 text-[#1E3A5F]" /> Fleet Inventory Preview
             </CardTitle>
             <Link
-              to="/admin/equipment"
+              to={URL.ADMIN_EQUIPMENT}
               className="text-xs font-semibold text-[#1E3A5F] hover:underline flex items-center gap-1"
             >
               Manage <ArrowRight className="w-3 h-3" />

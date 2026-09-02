@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { URL } from './url-constant';
 
 interface ProtectedRouteProps {
   children: React.ReactElement;
@@ -20,12 +21,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (!isAuthenticated) {
     showToast(t('SIGN_IN_REQUIRED'), 'info');
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to={URL.LOGIN} state={{ from: location }} replace />;
   }
 
   if (requireAdmin && !isAdmin) {
     showToast(t('ADMIN_ACCESS_REQUIRED'), 'error');
-    return <Navigate to="/equipment" replace />;
+    return <Navigate to={URL.EQUIPMENT} replace />;
   }
 
   return children;

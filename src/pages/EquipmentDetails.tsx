@@ -1,3 +1,4 @@
+import { URL } from '../routes/url-constant';
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -9,11 +10,11 @@ import { getErrorMessage } from '../api/client';
 import { formatCurrency, calculateRentalDays } from '../utils/formatters';
 import { getEquipmentIcon } from '../utils/categoryIcons';
 import type { EquipmentItem } from '../types/api.types';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
-import { Card, CardContent } from '../components/ui/Card';
-import { Spinner } from '../components/ui/Spinner';
-import { Modal } from '../components/ui/Modal';
+import { Button } from '../components/atoms/Button';
+import { Badge } from '../components/atoms/Badge';
+import { Card, CardContent } from '../components/molecules/Card';
+import { Spinner } from '../components/atoms/Spinner';
+import { Modal } from '../components/molecules/Modal';
 import {
   ArrowLeft,
   ShieldCheck,
@@ -96,7 +97,7 @@ export const EquipmentDetails: React.FC = () => {
 
     if (!isAuthenticated) {
       showToast(t('SIGN_IN_TO_RENT_REQUIRED'), 'info');
-      navigate('/login', { state: { from: { pathname: `/equipment/${id}` } } });
+      navigate(URL.LOGIN, { state: { from: { pathname: URL.EQUIPMENT_DETAILS(id!) } } });
       return;
     }
 
@@ -176,7 +177,7 @@ export const EquipmentDetails: React.FC = () => {
         <p className="text-xs text-slate-500">
           {error || 'The requested equipment does not exist or has been retired.'}
         </p>
-        <Link to="/equipment">
+        <Link to={URL.EQUIPMENT}>
           <Button variant="primary" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
             Back to Catalog
           </Button>
@@ -192,7 +193,7 @@ export const EquipmentDetails: React.FC = () => {
       {/* Back button */}
       <div>
         <Link
-          to="/equipment"
+          to={URL.EQUIPMENT}
           className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Equipment Catalog
@@ -509,7 +510,7 @@ export const EquipmentDetails: React.FC = () => {
                 className="w-1/2"
                 onClick={() => {
                   setBookingResult(null);
-                  navigate('/rentals');
+                  navigate(URL.RENTALS);
                 }}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
               >
