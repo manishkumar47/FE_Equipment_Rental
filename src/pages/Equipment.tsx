@@ -409,11 +409,6 @@ export const Equipment: React.FC = () => {
                           Out of Stock
                         </Badge>
                       )}
-                      {!!item.totalItemCount && (
-                        <p className="text-[10px] text-slate-400 mt-1">
-                          {item.availableItemCount ?? 0}/{item.totalItemCount} tracked units ready
-                        </p>
-                      )}
                     </div>
                   </div>
 

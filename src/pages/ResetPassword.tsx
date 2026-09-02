@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/auth.api';
 import { getErrorMessage } from '../api/client';
 import { Input } from '../components/ui/Input';
@@ -12,6 +13,7 @@ export const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
+  const { logout } = useAuth();
   const { t } = useTranslation();
 
   const token = searchParams.get('token') || '';
@@ -105,6 +107,7 @@ export const ResetPassword: React.FC = () => {
     setIsLoading(true);
     try {
       await authApi.resetPassword(password, token.trim());
+      logout();
       setIsSuccess(true);
       showToast(t('PASSWORD_RESET_SUCCESSFULLY'), 'success');
     } catch (err: unknown) {
