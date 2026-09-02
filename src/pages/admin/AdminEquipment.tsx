@@ -6,7 +6,7 @@ import { getErrorMessage } from "../../api/client";
 import { formatCurrency } from "../../utils/formatters";
 import { getEquipmentIcon } from "../../utils/categoryIcons";
 import type { Category, EquipmentItem } from "../../types/api.types";
-import type { CsvRow } from "../../utils/csvValidation";
+import type { CsvRow, RowError } from "../../utils/csvValidation";
 import { Button } from "../../components/atoms/Button";
 import { Input } from "../../components/atoms/Input";
 import { Badge } from "../../components/atoms/Badge";
@@ -79,6 +79,8 @@ export const AdminEquipment: React.FC = () => {
     invalidRows: number;
     duplicateNames: number;
   } | null>(null);
+  const [csvRowErrors, setCsvRowErrors] = useState<RowError[]>([]);
+  const [csvDuplicates, setCsvDuplicates] = useState<{ name: string; rowNumbers: number[] }[]>([]);
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [bulkImportCategoryId, setBulkImportCategoryId] = useState<number | "">("");
   const [isBulkImporting, setIsBulkImporting] = useState(false);
@@ -153,14 +155,6 @@ export const AdminEquipment: React.FC = () => {
       return;
     }
 
-    // Log detailed results to console for admin debugging
-    if (result.errors.length > 0) {
-      console.warn("[CSV Import] Row-level errors:", result.errors);
-    }
-    if (result.duplicatesInFile.length > 0) {
-      console.warn("[CSV Import] Duplicates found within file:", result.duplicatesInFile);
-    }
-
     if (result.valid.length === 0) {
       showToast(
         t("IMPORT_NO_VALID_ROWS", {
@@ -179,6 +173,8 @@ export const AdminEquipment: React.FC = () => {
       invalidRows: result.errors.length,
       duplicateNames: result.duplicatesInFile.length,
     });
+    setCsvRowErrors(result.errors);
+    setCsvDuplicates(result.duplicatesInFile);
     setBulkImportCategoryId("");
     setIsCategoryPickerOpen(true);
   };
@@ -210,6 +206,8 @@ export const AdminEquipment: React.FC = () => {
       setIsCategoryPickerOpen(false);
       setPendingCsvRows([]);
       setCsvValidationSummary(null);
+      setCsvRowErrors([]);
+      setCsvDuplicates([]);
 
       // Refresh the equipment list
       if (page === 1) {
@@ -825,6 +823,8 @@ export const AdminEquipment: React.FC = () => {
               setIsCategoryPickerOpen(false);
               setPendingCsvRows([]);
               setCsvValidationSummary(null);
+              setCsvRowErrors([]);
+              setCsvDuplicates([]);
             }
           }}
           title="Import Inventory from CSV"
@@ -840,19 +840,29 @@ export const AdminEquipment: React.FC = () => {
                   <span>{pendingCsvRows.length} valid row(s) ready to import</span>
                 </div>
                 {csvValidationSummary.invalidRows > 0 && (
-                  <div className="flex items-center gap-2 text-xs text-amber-700">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    <span>
-                      {csvValidationSummary.invalidRows} invalid row(s) skipped — see browser console for details
-                    </span>
+                  <div className="flex items-start gap-2 text-xs text-amber-700">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                    <span>{csvValidationSummary.invalidRows} invalid row(s) skipped</span>
                   </div>
                 )}
                 {csvValidationSummary.duplicateNames > 0 && (
-                  <div className="flex items-center gap-2 text-xs text-amber-700">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    <span>
-                      {csvValidationSummary.duplicateNames} duplicate name(s) removed — see browser console
-                    </span>
+                  <div className="flex items-start gap-2 text-xs text-amber-700">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                    <span>{csvValidationSummary.duplicateNames} duplicate name(s) removed</span>
+                  </div>
+                )}
+                {(csvRowErrors.length > 0 || csvDuplicates.length > 0) && (
+                  <div className="mt-1 max-h-32 overflow-y-auto rounded-md border border-amber-200 bg-amber-50 p-2 space-y-1">
+                    {csvRowErrors.map((rowError) => (
+                      <p key={rowError.rowNumber} className="text-[11px] text-amber-800 leading-relaxed">
+                        Row {rowError.rowNumber}: {rowError.errors.join('; ')}
+                      </p>
+                    ))}
+                    {csvDuplicates.map((dup) => (
+                      <p key={dup.name} className="text-[11px] text-amber-800 leading-relaxed">
+                        "{dup.name}" duplicated in rows {dup.rowNumbers.join(', ')} — all skipped, resolve and re-import
+                      </p>
+                    ))}
                   </div>
                 )}
               </div>
@@ -889,6 +899,8 @@ export const AdminEquipment: React.FC = () => {
                   setIsCategoryPickerOpen(false);
                   setPendingCsvRows([]);
                   setCsvValidationSummary(null);
+                  setCsvRowErrors([]);
+                  setCsvDuplicates([]);
                 }}
                 disabled={isBulkImporting}
               >
