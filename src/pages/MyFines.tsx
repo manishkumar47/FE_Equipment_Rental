@@ -142,7 +142,7 @@ export const MyFines: React.FC = () => {
         <div className="space-y-4">
           {Array.from({ length: 2 }).map((_, i) => (
             <Card key={i} className="p-6">
-              <div className="flex justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
                 <div className="flex items-start gap-4">
                   <Skeleton className="w-12 h-12 rounded-lg" />
                   <div className="space-y-2">

@@ -260,7 +260,8 @@ export const EquipmentUnitsModal: React.FC<EquipmentUnitsModalProps> = ({
               description="Register a serial number / asset tag above to start tracking individual units for this equipment."
             />
           ) : (
-            <div className="overflow-x-auto border border-slate-200 rounded-lg">
+            <>
+            <div className="hidden md:block overflow-x-auto border border-slate-200 rounded-lg">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
                   <tr>
@@ -372,6 +373,119 @@ export const EquipmentUnitsModal: React.FC<EquipmentUnitsModalProps> = ({
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile card list */}
+            <div className="md:hidden space-y-2.5">
+              {units.map((unit) => {
+                const isEditing = editingUnitId === unit.id;
+                return (
+                  <div key={unit.id} className="p-3 rounded-lg border border-slate-200 space-y-2.5">
+                    <div>
+                      <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block mb-1">
+                        Serial / Tag
+                      </label>
+                      {isEditing ? (
+                        <input
+                          value={editSerial}
+                          onChange={(e) => setEditSerial(e.target.value)}
+                          className="w-full rounded border border-slate-300 px-2 py-1 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F]"
+                        />
+                      ) : (
+                        <span className="font-mono text-xs text-slate-800">{unit.serialNumber}</span>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block mb-1">
+                        Status
+                      </label>
+                      {isEditing ? (
+                        <select
+                          value={editStatus}
+                          onChange={(e) => setEditStatus(e.target.value as EquipmentUnitStatus)}
+                          className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F]"
+                        >
+                          {STATUS_OPTIONS.map((s) => (
+                            <option key={s} value={s}>
+                              {STATUS_LABEL[s]}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <Badge variant={STATUS_BADGE_VARIANT[unit.status]} size="sm">
+                          {STATUS_LABEL[unit.status]}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block mb-1">
+                        Condition Notes
+                      </label>
+                      {isEditing ? (
+                        <input
+                          value={editNotes}
+                          onChange={(e) => setEditNotes(e.target.value)}
+                          placeholder="Condition notes"
+                          className="w-full rounded border border-slate-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F]"
+                        />
+                      ) : (
+                        <span className="text-xs text-slate-500">{unit.conditionNotes || '—'}</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-slate-100">
+                      {isEditing ? (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSaveEdit(unit)}
+                            isLoading={isSavingEdit}
+                            className="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                            aria-label="Save"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleCancelEdit}
+                            disabled={isSavingEdit}
+                            className="p-1.5 text-slate-500 hover:text-slate-700"
+                            aria-label="Cancel"
+                          >
+                            <XIcon className="w-3.5 h-3.5" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleStartEdit(unit)}
+                            className="p-1.5 text-slate-600 hover:text-slate-900"
+                            aria-label="Edit"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeletingUnit(unit)}
+                            className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                            aria-label="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            </>
           )}
 
           <div className="flex items-center justify-end pt-2 border-t border-slate-100">

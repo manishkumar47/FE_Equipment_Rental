@@ -65,7 +65,7 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="bg-white p-8 rounded-xl border border-slate-200/90 shadow-sm">
+    <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200/90 shadow-sm">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-slate-900 tracking-tight">
           Sign In to EquipFlow

@@ -43,7 +43,7 @@ export const ForgotPassword: React.FC = () => {
 
   if (isSubmitted) {
     return (
-      <div className="bg-white p-8 rounded-xl border border-slate-200/90 shadow-sm text-center">
+      <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200/90 shadow-sm text-center">
         <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100">
           <CheckCircle2 className="w-6 h-6" />
         </div>
@@ -72,7 +72,7 @@ export const ForgotPassword: React.FC = () => {
   }
 
   return (
-    <div className="bg-white p-8 rounded-xl border border-slate-200/90 shadow-sm">
+    <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200/90 shadow-sm">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-slate-900 tracking-tight">
           Forgot Password

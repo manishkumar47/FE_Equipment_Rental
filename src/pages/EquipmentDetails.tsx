@@ -272,7 +272,7 @@ export const EquipmentDetails: React.FC = () => {
         </div>
 
         {/* Right Column: Rental Booking Calculator Panel (5 cols) */}
-        <div className="lg:col-span-5 sticky top-24">
+        <div className="lg:col-span-5 lg:sticky lg:top-24">
           <Card className="shadow-xs border-slate-200">
             <CardContent className="p-6 space-y-5">
               {/* Daily Rate Header */}

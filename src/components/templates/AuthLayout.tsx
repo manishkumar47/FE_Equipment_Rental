@@ -7,7 +7,7 @@ export const AuthLayout: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-[#F8FAFC]">
       {/* Left branding panel */}
-      <div className="lg:w-1/2 bg-[#1E3A5F] text-white p-8 lg:p-16 flex flex-col justify-between relative overflow-hidden">
+      <div className="lg:w-1/2 bg-[#1E3A5F] text-white p-6 sm:p-8 lg:p-16 flex flex-col justify-between relative overflow-hidden">
         {/* Subtle grid pattern background */}
         <div
           className="absolute inset-0 opacity-10 pointer-events-none"
@@ -37,7 +37,7 @@ export const AuthLayout: React.FC = () => {
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             Enterprise Equipment Operations
           </div>
-          <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-white leading-tight mb-4">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white leading-tight mb-4">
             Reliable Equipment Rental for Production Teams
           </h1>
           <p className="text-sm text-slate-300 leading-relaxed mb-8">

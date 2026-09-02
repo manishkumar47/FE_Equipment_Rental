@@ -32,7 +32,7 @@ export const ResetPassword: React.FC = () => {
   // 1. Missing token state: if token query param is missing, do NOT render the form
   if (!token) {
     return (
-      <div className="bg-white p-8 rounded-xl border border-slate-200/90 shadow-sm text-center">
+      <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200/90 shadow-sm text-center">
         <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4 border border-amber-200">
           <AlertTriangle className="w-6 h-6" />
         </div>
@@ -60,7 +60,7 @@ export const ResetPassword: React.FC = () => {
   // 2. Success state
   if (isSuccess) {
     return (
-      <div className="bg-white p-8 rounded-xl border border-slate-200/90 shadow-sm text-center">
+      <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200/90 shadow-sm text-center">
         <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100">
           <CheckCircle2 className="w-6 h-6" />
         </div>
@@ -122,7 +122,7 @@ export const ResetPassword: React.FC = () => {
 
   // 3. Valid token: Render reset password form
   return (
-    <div className="bg-white p-8 rounded-xl border border-slate-200/90 shadow-sm">
+    <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200/90 shadow-sm">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-slate-900 tracking-tight">
           Reset Password
