@@ -51,6 +51,7 @@ export const MyRentals: React.FC = () => {
 
   // Return Request State
   const [returnRequestingBooking, setReturnRequestingBooking] = useState<RentalBookingItem | null>(null);
+  const [returnQuantity, setReturnQuantity] = useState('');
   const [isRequestingReturn, setIsRequestingReturn] = useState(false);
 
   // Details Modal State
@@ -96,12 +97,31 @@ export const MyRentals: React.FC = () => {
     }
   };
 
+  const isTrackedBooking = (booking: RentalBookingItem) => (booking.trackedItemsCount ?? 0) > 0;
+  const outstandingCount = (booking: RentalBookingItem) => booking.outstandingItemsCount ?? booking.quantity;
+
+  const handleOpenReturnModal = (booking: RentalBookingItem) => {
+    setReturnRequestingBooking(booking);
+    setReturnQuantity(String(outstandingCount(booking)));
+  };
+
   const handleRequestReturn = async () => {
     if (!returnRequestingBooking) return;
 
+    const tracked = isTrackedBooking(returnRequestingBooking);
+    const max = outstandingCount(returnRequestingBooking);
+    let quantity: number | undefined;
+    if (tracked) {
+      quantity = parseInt(returnQuantity, 10);
+      if (!Number.isInteger(quantity) || quantity <= 0 || quantity > max) {
+        showToast(t('RETURN_QUANTITY_INVALID', { max }), 'error');
+        return;
+      }
+    }
+
     setIsRequestingReturn(true);
     try {
-      const updated = await returnApi.requestReturn(returnRequestingBooking.id);
+      const updated = await returnApi.requestReturn(returnRequestingBooking.id, quantity);
       showToast(t('RETURN_REQUEST_SUBMITTED'), 'success');
       setBookings((prev) =>
         prev.map((b) =>
@@ -288,6 +308,14 @@ export const MyRentals: React.FC = () => {
                             <span className="font-semibold text-slate-800">
                               {booking.quantity} {booking.quantity === 1 ? 'unit' : 'units'}
                             </span>
+                            {isTrackedBooking(booking) &&
+                              isActiveBooking &&
+                              outstandingCount(booking) < booking.quantity && (
+                                <span className="text-slate-400 font-normal">
+                                  ({booking.quantity - outstandingCount(booking)} returned so far,{' '}
+                                  {outstandingCount(booking)} outstanding)
+                                </span>
+                              )}
                           </div>
 
                           {total > 0 && (
@@ -318,7 +346,7 @@ export const MyRentals: React.FC = () => {
                         <Button
                           variant="primary"
                           size="sm"
-                          onClick={() => setReturnRequestingBooking(booking)}
+                          onClick={() => handleOpenReturnModal(booking)}
                           leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
                           className="bg-[#1E3A5F] hover:bg-[#152843]"
                         >
@@ -493,8 +521,8 @@ export const MyRentals: React.FC = () => {
         </Modal>
       )}
 
-      {/* Return Request Confirmation Dialog */}
-      {returnRequestingBooking && (
+      {/* Return Request — plain confirm for untracked equipment */}
+      {returnRequestingBooking && !isTrackedBooking(returnRequestingBooking) && (
         <ConfirmDialog
           isOpen={!!returnRequestingBooking}
           onClose={() => setReturnRequestingBooking(null)}
@@ -508,6 +536,58 @@ export const MyRentals: React.FC = () => {
           variant="primary"
           isLoading={isRequestingReturn}
         />
+      )}
+
+      {/* Return Request — quantity picker for individually tracked equipment */}
+      {returnRequestingBooking && isTrackedBooking(returnRequestingBooking) && (
+        <Modal
+          isOpen={!!returnRequestingBooking}
+          onClose={() => setReturnRequestingBooking(null)}
+          title="Request Return"
+          description={`Booking #${returnRequestingBooking.id} — ${
+            returnRequestingBooking.equipment?.name || 'this equipment'
+          }`}
+          maxWidth="sm"
+        >
+          <div className="space-y-4 text-left">
+            <p className="text-xs text-slate-600 leading-relaxed">
+              You have {outstandingCount(returnRequestingBooking)} unit(s) still with you. Choose how
+              many you're returning now — you can return the rest later in a separate request.
+            </p>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-800">Quantity to return</label>
+              <input
+                type="number"
+                min={1}
+                max={outstandingCount(returnRequestingBooking)}
+                value={returnQuantity}
+                onChange={(e) => setReturnQuantity(e.target.value)}
+                className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F]"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setReturnRequestingBooking(null)}
+                disabled={isRequestingReturn}
+              >
+                Not Now
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleRequestReturn}
+                isLoading={isRequestingReturn}
+                className="bg-[#1E3A5F] hover:bg-[#152843]"
+              >
+                Request Return
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* Cancel Confirmation Dialog */}
