@@ -2,8 +2,8 @@ import { apiClient } from './client';
 import type { ApiResponse, User, CreateUserPayload, Role } from '../types/api.types';
 
 export const userApi = {
-  getAll: async (): Promise<User[]> => {
-    const res = await apiClient.get<ApiResponse<User[]>>('/users');
+  getAll: async (signal?: AbortSignal): Promise<User[]> => {
+    const res = await apiClient.get<ApiResponse<User[]>>('/users', { signal });
     return res.data.data || [];
   },
 

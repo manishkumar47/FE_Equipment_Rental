@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { AuthSession } from '../types/api.types';
 
 interface AuthContextType {
@@ -8,6 +8,13 @@ interface AuthContextType {
   login: (session: AuthSession) => void;
   logout: () => void;
   updateLocalUser: (updates: Partial<AuthSession>) => void;
+  /**
+   * Consumes the "this logout was user-initiated" flag set by `logout()`.
+   * Lets ProtectedRoute skip the "please sign in" toast for a deliberate
+   * sign-out (as opposed to landing on a protected route while already
+   * logged out, or a session expiring mid-page).
+   */
+  consumeIntentionalLogout: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,9 +47,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
   };
 
+  const intentionalLogoutRef = useRef(false);
+
   const logout = () => {
+    intentionalLogoutRef.current = true;
     setUser(null);
     localStorage.removeItem(AUTH_STORAGE_KEY);
+  };
+
+  const consumeIntentionalLogout = () => {
+    if (!intentionalLogoutRef.current) return false;
+    intentionalLogoutRef.current = false;
+    return true;
   };
 
   const updateLocalUser = (updates: Partial<AuthSession>) => {
@@ -66,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         updateLocalUser,
+        consumeIntentionalLogout,
       }}
     >
       {children}

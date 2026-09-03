@@ -14,7 +14,8 @@ export const bookingRequestApi = {
   getPendingRequests: async (
     page = 1,
     limit = 20,
-    search?: string
+    search?: string,
+    signal?: AbortSignal
   ): Promise<PaginatedResponse<RentalBookingItem>> => {
     const params = new URLSearchParams();
     params.set('page', page.toString());
@@ -24,7 +25,8 @@ export const bookingRequestApi = {
     }
 
     const res = await apiClient.get<ApiResponse<PaginatedResponse<RentalBookingItem>>>(
-      `/admin/rental-bookings/requests?${params.toString()}`
+      `/admin/rental-bookings/requests?${params.toString()}`,
+      { signal }
     );
     return res.data.data;
   },

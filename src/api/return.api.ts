@@ -29,7 +29,8 @@ export const returnApi = {
   getPendingReturnRequests: async (
     page = 1,
     limit = 20,
-    search?: string
+    search?: string,
+    signal?: AbortSignal
   ): Promise<PaginatedResponse<RentalBookingItem>> => {
     const params = new URLSearchParams();
     params.set('page', page.toString());
@@ -39,7 +40,8 @@ export const returnApi = {
     }
 
     const res = await apiClient.get<ApiResponse<PaginatedResponse<RentalBookingItem>>>(
-      `/admin/rentals/return-requests?${params.toString()}`
+      `/admin/rentals/return-requests?${params.toString()}`,
+      { signal }
     );
     return res.data.data;
   },
