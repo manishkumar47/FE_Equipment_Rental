@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 import { returnApi } from '../../api/return.api';
 import { useToast } from '../../context/ToastContext';
 import { getErrorMessage } from '../../api/client';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import {
   formatDate,
   formatDateTime,
@@ -81,22 +83,27 @@ export const AdminReturns: React.FC = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [isSubmittingReject, setIsSubmittingReject] = useState(false);
 
-  const fetchReturns = useCallback(async () => {
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 400);
+
+  const fetchReturns = useCallback(async (signal?: AbortSignal) => {
     setIsLoading(true);
     try {
-      const res = await returnApi.getPendingReturnRequests(page, limit, searchQuery);
+      const res = await returnApi.getPendingReturnRequests(page, limit, debouncedSearchQuery, signal);
       setReturnRequests(res.data);
       setTotal(res.total);
       setTotalPages(res.totalPages || 1);
     } catch (err: unknown) {
+      if (axios.isCancel(err)) return;
       showToast(getErrorMessage(err), 'error');
     } finally {
-      setIsLoading(false);
+      if (!signal?.aborted) setIsLoading(false);
     }
-  }, [page, limit, searchQuery, showToast]);
+  }, [page, limit, debouncedSearchQuery, showToast]);
 
   useEffect(() => {
-    fetchReturns();
+    const controller = new AbortController();
+    fetchReturns(controller.signal);
+    return () => controller.abort();
   }, [fetchReturns]);
 
   // Open Confirm Modal
@@ -365,7 +372,7 @@ export const AdminReturns: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchReturns}
+            onClick={() => fetchReturns()}
             disabled={isLoading}
             leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
           >

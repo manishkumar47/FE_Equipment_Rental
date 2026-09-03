@@ -26,7 +26,8 @@ export const bookingApi = {
     page = 1,
     limit = 20,
     search?: string,
-    status?: BookingStatus
+    status?: BookingStatus,
+    signal?: AbortSignal
   ): Promise<PaginatedResponse<RentalBookingItem>> => {
     const params = new URLSearchParams();
     params.set('page', page.toString());
@@ -35,7 +36,8 @@ export const bookingApi = {
     if (status) params.set('status', status);
 
     const res = await apiClient.get<ApiResponse<PaginatedResponse<RentalBookingItem>>>(
-      `/admin/rental-bookings?${params.toString()}`
+      `/admin/rental-bookings?${params.toString()}`,
+      { signal }
     );
     return res.data.data;
   },

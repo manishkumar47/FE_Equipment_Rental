@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 import { bookingApi } from '../../api/booking.api';
 import { useToast } from '../../context/ToastContext';
 import { getErrorMessage } from '../../api/client';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import {
   formatDate,
   formatCurrency,
@@ -101,27 +103,33 @@ export const AdminBookings: React.FC = () => {
   const [cancellingBooking, setCancellingBooking] = useState<RentalBookingItem | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  const fetchBookings = useCallback(async () => {
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 400);
+
+  const fetchBookings = useCallback(async (signal?: AbortSignal) => {
     setIsLoading(true);
     try {
       const res = await bookingApi.getAllPaginated(
         page,
         limit,
-        searchQuery,
-        statusFilter === 'ALL' ? undefined : statusFilter
+        debouncedSearchQuery,
+        statusFilter === 'ALL' ? undefined : statusFilter,
+        signal
       );
       setBookings(res.data);
       setTotal(res.total);
       setTotalPages(res.totalPages || 1);
     } catch (err: unknown) {
+      if (axios.isCancel(err)) return;
       showToast(getErrorMessage(err), 'error');
     } finally {
-      setIsLoading(false);
+      if (!signal?.aborted) setIsLoading(false);
     }
-  }, [page, limit, searchQuery, statusFilter, showToast]);
+  }, [page, limit, debouncedSearchQuery, statusFilter, showToast]);
 
   useEffect(() => {
-    fetchBookings();
+    const controller = new AbortController();
+    fetchBookings(controller.signal);
+    return () => controller.abort();
   }, [fetchBookings]);
 
   const filteredBookings = bookings;

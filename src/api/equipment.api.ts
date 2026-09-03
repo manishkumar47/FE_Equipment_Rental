@@ -19,14 +19,17 @@ export const equipmentApi = {
    * Paginated/filtered catalog listing.
    * GET /equipments?page=1&limit=24&search=&categoryId=&inStockOnly=&sortBy=
    */
-  getPaginated: async (options: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    categoryId?: number;
-    inStockOnly?: boolean;
-    sortBy?: EquipmentSortBy;
-  }): Promise<PaginatedResponse<EquipmentItem>> => {
+  getPaginated: async (
+    options: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      categoryId?: number;
+      inStockOnly?: boolean;
+      sortBy?: EquipmentSortBy;
+    },
+    signal?: AbortSignal
+  ): Promise<PaginatedResponse<EquipmentItem>> => {
     const { page = 1, limit = 24, search, categoryId, inStockOnly, sortBy } = options;
     const params = new URLSearchParams();
     params.set('page', page.toString());
@@ -37,7 +40,8 @@ export const equipmentApi = {
     if (sortBy) params.set('sortBy', sortBy);
 
     const res = await apiClient.get<ApiResponse<PaginatedResponse<EquipmentItem>>>(
-      `/equipments?${params.toString()}`
+      `/equipments?${params.toString()}`,
+      { signal }
     );
     return res.data.data;
   },

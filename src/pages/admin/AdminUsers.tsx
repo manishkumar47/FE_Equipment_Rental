@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 import { userApi } from '../../api/user.api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
@@ -53,20 +54,23 @@ export const AdminUsers: React.FC = () => {
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (signal?: AbortSignal) => {
     setIsLoading(true);
     try {
-      const list = await userApi.getAll();
+      const list = await userApi.getAll(signal);
       setUsers(list);
     } catch (err: unknown) {
+      if (axios.isCancel(err)) return;
       showToast(getErrorMessage(err), 'error');
     } finally {
-      setIsLoading(false);
+      if (!signal?.aborted) setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    const controller = new AbortController();
+    fetchUsers(controller.signal);
+    return () => controller.abort();
   }, []);
 
   const filteredUsers = useMemo(() => {
@@ -185,7 +189,7 @@ export const AdminUsers: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchUsers}
+            onClick={() => fetchUsers()}
             disabled={isLoading}
             leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
           >

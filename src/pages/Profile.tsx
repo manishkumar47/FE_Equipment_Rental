@@ -1,13 +1,16 @@
 import { URL } from '../routes/url-constant';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { userApi } from '../api/user.api';
+import { useToast } from '../context/ToastContext';
+import { getErrorMessage } from '../api/client';
 import { formatDate } from '../utils/formatters';
 import type { User as UserType } from '../types/api.types';
 import { Button } from '../components/atoms/Button';
 import { Badge } from '../components/atoms/Badge';
+import { Skeleton } from '../components/atoms/Skeleton';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/molecules/Card';
+import { EmptyState } from '../components/molecules/EmptyState';
 import {
   User as UserIcon,
   Mail,
@@ -19,26 +22,74 @@ import {
 } from 'lucide-react';
 
 export const Profile: React.FC = () => {
-  const { user: authUser, isAdmin } = useAuth();
+  const { showToast } = useToast();
   const [profileData, setProfileData] = useState<UserType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProfile = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
         const data = await userApi.getProfile();
         setProfileData(data);
-      } catch {
-        // Fallback to authUser context
+      } catch (err) {
+        const message = getErrorMessage(err);
+        setError(message);
+        showToast(message, 'error');
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const name = profileData?.name || authUser?.name || 'User';
-  const email = profileData?.email || authUser?.email || '';
-  const role = profileData?.role || authUser?.role || 'USER';
-  const createdAt = profileData?.createdAt;
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-6 sm:p-8 flex items-center gap-4 shadow-2xs">
+          <Skeleton className="w-16 h-16 rounded-xl shrink-0" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="w-40 h-6" />
+            <Skeleton className="w-56 h-4" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="border-slate-200">
+            <CardContent className="space-y-4 pt-6">
+              <Skeleton className="w-full h-6" />
+              <Skeleton className="w-full h-6" />
+              <Skeleton className="w-full h-6" />
+              <Skeleton className="w-full h-6" />
+            </CardContent>
+          </Card>
+          <Card className="border-slate-200">
+            <CardContent className="space-y-4 pt-6">
+              <Skeleton className="w-full h-20" />
+              <Skeleton className="w-full h-8" />
+              <Skeleton className="w-full h-8" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profileData) {
+    return (
+      <EmptyState
+        icon={<UserIcon className="w-10 h-10" />}
+        title="Unable to load profile"
+        description={error || 'Something went wrong while loading your profile.'}
+      />
+    );
+  }
+
+  const { name, email, role, createdAt, id } = profileData;
+  const isAdmin = role === 'ADMIN';
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -91,7 +142,7 @@ export const Profile: React.FC = () => {
             <div className="flex justify-between py-2 border-b border-slate-100">
               <span className="text-slate-500">Account ID:</span>
               <span className="font-mono font-semibold text-slate-800">
-                #{authUser?.id || profileData?.id || '—'}
+                #{id}
               </span>
             </div>
             <div className="flex justify-between py-2 border-b border-slate-100">
@@ -106,12 +157,12 @@ export const Profile: React.FC = () => {
               <span className="text-slate-500">Access Level:</span>
               <span className="font-semibold text-slate-800">{role}</span>
             </div>
-            {createdAt && (
+            
               <div className="flex justify-between py-2">
                 <span className="text-slate-500">Member Since:</span>
                 <span className="font-semibold text-slate-800">{formatDate(createdAt)}</span>
               </div>
-            )}
+            
           </CardContent>
         </Card>
 

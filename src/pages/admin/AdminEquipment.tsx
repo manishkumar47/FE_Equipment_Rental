@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import axios from "axios";
 import { equipmentApi } from "../../api/equipment.api";
 import { useToast } from "../../context/ToastContext";
 import { getErrorMessage } from "../../api/client";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { formatCurrency } from "../../utils/formatters";
 import { getEquipmentIcon } from "../../utils/categoryIcons";
 import type { Category, EquipmentItem } from "../../types/api.types";
@@ -92,35 +94,46 @@ export const AdminEquipment: React.FC = () => {
   // Physical Units Modal State
   const [managingUnitsItem, setManagingUnitsItem] = useState<EquipmentItem | null>(null);
 
-  const fetchEquipments = useCallback(async () => {
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 400);
+
+  const fetchEquipments = useCallback(async (signal?: AbortSignal) => {
     setIsLoading(true);
     try {
-      const res = await equipmentApi.getPaginated({ page, limit, search: searchQuery });
+      const res = await equipmentApi.getPaginated(
+        { page, limit, search: debouncedSearchQuery },
+        signal
+      );
       setEquipments(res.data);
       setTotal(res.total);
       setTotalPages(res.totalPages || 1);
     } catch (err: unknown) {
+      if (axios.isCancel(err)) return;
       showToast(getErrorMessage(err), "error");
     } finally {
-      setIsLoading(false);
+      if (!signal?.aborted) setIsLoading(false);
     }
-  }, [page, limit, searchQuery, showToast]);
+  }, [page, limit, debouncedSearchQuery, showToast]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (signal?: AbortSignal) => {
     try {
-      const items = await categoryApi.getAll();
+      const items = await categoryApi.getAll(signal);
       setCategories(items);
     } catch (err: unknown) {
+      if (axios.isCancel(err)) return;
       showToast(getErrorMessage(err), "error");
     }
   };
 
   useEffect(() => {
-    fetchEquipments();
+    const controller = new AbortController();
+    fetchEquipments(controller.signal);
+    return () => controller.abort();
   }, [fetchEquipments]);
 
   useEffect(() => {
-    fetchCategories();
+    const controller = new AbortController();
+    fetchCategories(controller.signal);
+    return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

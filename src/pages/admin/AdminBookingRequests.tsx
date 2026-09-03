@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 import { bookingRequestApi } from '../../api/bookingRequest.api';
 import { useToast } from '../../context/ToastContext';
 import { getErrorMessage } from '../../api/client';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { formatDate, formatCurrency, calculateRentalDays } from '../../utils/formatters';
 import type { RentalBookingItem } from '../../types/api.types';
 import { Button } from '../../components/atoms/Button';
@@ -40,22 +42,27 @@ export const AdminBookingRequests: React.FC = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [isSubmittingReject, setIsSubmittingReject] = useState(false);
 
-  const fetchRequests = useCallback(async () => {
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 400);
+
+  const fetchRequests = useCallback(async (signal?: AbortSignal) => {
     setIsLoading(true);
     try {
-      const res = await bookingRequestApi.getPendingRequests(page, limit, searchQuery);
+      const res = await bookingRequestApi.getPendingRequests(page, limit, debouncedSearchQuery, signal);
       setRequests(res.data);
       setTotal(res.total);
       setTotalPages(res.totalPages || 1);
     } catch (err: unknown) {
+      if (axios.isCancel(err)) return;
       showToast(getErrorMessage(err), 'error');
     } finally {
-      setIsLoading(false);
+      if (!signal?.aborted) setIsLoading(false);
     }
-  }, [page, limit, searchQuery, showToast]);
+  }, [page, limit, debouncedSearchQuery, showToast]);
 
   useEffect(() => {
-    fetchRequests();
+    const controller = new AbortController();
+    fetchRequests(controller.signal);
+    return () => controller.abort();
   }, [fetchRequests]);
 
   const handleApprove = async (booking: RentalBookingItem) => {
@@ -142,7 +149,7 @@ export const AdminBookingRequests: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchRequests}
+            onClick={() => fetchRequests()}
             disabled={isLoading}
             leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
           >
